@@ -1,0 +1,56 @@
+<div class="wysiwyg-editor-container">
+  <div class="wysiwyg-toolbar" *ngIf="config.showToolbar !== false">
+    <ng-container *ngFor="let cmd of commands">
+      <div class="toolbar-separator" *ngIf="cmd.command === 'separator'"></div>
+      <button
+        *ngIf="cmd.command !== 'separator'"
+        class="toolbar-button"
+        [class.active]="isCommandActive(cmd.command)"
+        [disabled]="disabled"
+        [title]="cmd.tooltip || cmd.command"
+        (click)="executeCommand(cmd)"
+        type="button">
+        <span [innerHTML]="cmd.icon || cmd.command"></span>
+      </button>
+    </ng-container>
+    
+    <div class="color-picker-dropdown" *ngIf="showColorPicker">
+      <input type="color" [(ngModel)]="selectedColor" (change)="applyTextColor()">
+      <button (click)="applyTextColor()" type="button">Apply</button>
+      <button (click)="showColorPicker = false" type="button">Cancel</button>
+    </div>
+    
+    <div class="color-picker-dropdown" *ngIf="showBackgroundColorPicker">
+      <input type="color" [(ngModel)]="selectedBackgroundColor" (change)="applyBackgroundColor()">
+      <button (click)="applyBackgroundColor()" type="button">Apply</button>
+      <button (click)="showBackgroundColorPicker = false" type="button">Cancel</button>
+    </div>
+  </div>
+  
+  <div 
+    #editor
+    class="wysiwyg-editor-content"
+    [style.height]="config.height"
+    [style.minHeight]="config.minHeight"
+    [style.maxHeight]="config.maxHeight"
+    [attr.placeholder]="config.placeholder"
+    [class.disabled]="disabled"
+    contenteditable="true">
+  </div>
+  
+  <div class="link-dialog" *ngIf="showLinkDialog">
+    <div class="link-dialog-content">
+      <h3>Insert Link</h3>
+      <input 
+        #linkUrlInput
+        type="url" 
+        [(ngModel)]="linkUrl" 
+        placeholder="https://example.com"
+        (keyup.enter)="insertLink()">
+      <div class="link-dialog-buttons">
+        <button (click)="insertLink()" [disabled]="!linkUrl" type="button">Insert</button>
+        <button (click)="closeLinkDialog()" type="button">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
