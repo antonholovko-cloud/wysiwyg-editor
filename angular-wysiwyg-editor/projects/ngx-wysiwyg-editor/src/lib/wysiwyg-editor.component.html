@@ -53,4 +53,52 @@
       </div>
     </div>
   </div>
+  
+  <div class="padding-dialog" *ngIf="showPaddingDialog">
+    <div class="padding-dialog-content">
+      <h3>Set Padding</h3>
+      <div class="padding-grid">
+        <div class="padding-input-group">
+          <label for="paddingTop">Top (px):</label>
+          <input 
+            id="paddingTop"
+            type="number" 
+            [(ngModel)]="paddingTop" 
+            min="0"
+            placeholder="0">
+        </div>
+        <div class="padding-input-group">
+          <label for="paddingRight">Right (px):</label>
+          <input 
+            id="paddingRight"
+            type="number" 
+            [(ngModel)]="paddingRight" 
+            min="0"
+            placeholder="0">
+        </div>
+        <div class="padding-input-group">
+          <label for="paddingBottom">Bottom (px):</label>
+          <input 
+            id="paddingBottom"
+            type="number" 
+            [(ngModel)]="paddingBottom" 
+            min="0"
+            placeholder="0">
+        </div>
+        <div class="padding-input-group">
+          <label for="paddingLeft">Left (px):</label>
+          <input 
+            id="paddingLeft"
+            type="number" 
+            [(ngModel)]="paddingLeft" 
+            min="0"
+            placeholder="0">
+        </div>
+      </div>
+      <div class="padding-dialog-buttons">
+        <button (click)="applyPadding()" type="button">Apply</button>
+        <button (click)="closePaddingDialog()" type="button">Cancel</button>
+      </div>
+    </div>
+  </div>
 </div>

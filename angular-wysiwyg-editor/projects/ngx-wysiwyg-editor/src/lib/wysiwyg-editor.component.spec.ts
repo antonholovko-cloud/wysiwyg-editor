@@ -2,13 +2,11 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer } from '@angular/platform-browser';
 import { WysiwygEditorComponent, EditorConfig } from './wysiwyg-editor.component';
-import { DebugElement } from '@angular/core';
-import { By } from '@angular/platform-browser';
 
 describe('WysiwygEditorComponent', () => {
   let component: WysiwygEditorComponent;
   let fixture: ComponentFixture<WysiwygEditorComponent>;
-  let editorElement: DebugElement;
+  let editorElement: HTMLElement;
   let sanitizer: DomSanitizer;
 
   beforeEach(async () => {
@@ -20,7 +18,7 @@ describe('WysiwygEditorComponent', () => {
     component = fixture.componentInstance;
     sanitizer = TestBed.inject(DomSanitizer);
     fixture.detectChanges();
-    editorElement = fixture.debugElement.query(By.css('.wysiwyg-editor-content'));
+    editorElement = fixture.nativeElement.querySelector('.wysiwyg-editor-content');
   });
 
   it('should create', () => {
@@ -54,7 +52,7 @@ describe('WysiwygEditorComponent', () => {
     component.config.showToolbar = true;
     fixture.detectChanges();
     
-    const toolbar = fixture.debugElement.query(By.css('.wysiwyg-toolbar'));
+    const toolbar = fixture.nativeElement.querySelector('.wysiwyg-toolbar');
     expect(toolbar).toBeTruthy();
   });
 
@@ -62,25 +60,25 @@ describe('WysiwygEditorComponent', () => {
     component.config.showToolbar = false;
     fixture.detectChanges();
     
-    const toolbar = fixture.debugElement.query(By.css('.wysiwyg-toolbar'));
+    const toolbar = fixture.nativeElement.querySelector('.wysiwyg-toolbar');
     expect(toolbar).toBeFalsy();
   });
 
   it('should set contentEditable based on disabled state', () => {
     component.disabled = false;
     component.ngAfterViewInit();
-    expect(editorElement.nativeElement.contentEditable).toBe('true');
+    expect(editorElement.contentEditable).toBe('true');
     
     component.setDisabledState(true);
-    expect(editorElement.nativeElement.contentEditable).toBe('false');
+    expect(editorElement.contentEditable).toBe('false');
   });
 
   it('should emit contentChange event on content change', () => {
     spyOn(component.contentChange, 'emit');
     
     const testContent = '<p>Test content</p>';
-    editorElement.nativeElement.innerHTML = testContent;
-    editorElement.nativeElement.dispatchEvent(new Event('input'));
+    editorElement.innerHTML = testContent;
+    editorElement.dispatchEvent(new Event('input'));
     
     expect(component.contentChange.emit).toHaveBeenCalledWith(testContent);
   });
@@ -88,7 +86,7 @@ describe('WysiwygEditorComponent', () => {
   it('should emit blur event on blur', () => {
     spyOn(component.blur, 'emit');
     
-    editorElement.nativeElement.dispatchEvent(new Event('blur'));
+    editorElement.dispatchEvent(new Event('blur'));
     
     expect(component.blur.emit).toHaveBeenCalled();
   });
@@ -96,7 +94,7 @@ describe('WysiwygEditorComponent', () => {
   it('should emit focus event on focus', () => {
     spyOn(component.focus, 'emit');
     
-    editorElement.nativeElement.dispatchEvent(new Event('focus'));
+    editorElement.dispatchEvent(new Event('focus'));
     
     expect(component.focus.emit).toHaveBeenCalled();
   });
@@ -132,6 +130,15 @@ describe('WysiwygEditorComponent', () => {
   });
 
   it('should open link dialog on createLink command', () => {
+    // Create a selection first
+    const selection = window.getSelection();
+    const range = document.createRange();
+    const textNode = document.createTextNode('test');
+    editorElement.appendChild(textNode);
+    range.selectNodeContents(textNode);
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+    
     const linkCommand = component.defaultCommands.find(cmd => cmd.command === 'createLink');
     if (linkCommand) {
       component.executeCommand(linkCommand);
@@ -216,7 +223,7 @@ describe('WysiwygEditorComponent', () => {
     
     spyOn(pasteEvent, 'preventDefault');
     
-    editorElement.nativeElement.dispatchEvent(pasteEvent);
+    editorElement.dispatchEvent(pasteEvent);
     
     expect(pasteEvent.preventDefault).toHaveBeenCalled();
     expect(document.execCommand).toHaveBeenCalledWith('insertText', false, 'Pasted text');
@@ -227,7 +234,7 @@ describe('WysiwygEditorComponent', () => {
     component.writeValue(testHtml);
     
     expect(component.content).toBe(testHtml);
-    expect(editorElement.nativeElement.innerHTML).toBe(testHtml);
+    expect(editorElement.innerHTML).toBe(testHtml);
   });
 
   it('should register onChange callback', () => {
@@ -235,8 +242,8 @@ describe('WysiwygEditorComponent', () => {
     component.registerOnChange(onChangeFn);
     
     const testContent = '<p>New content</p>';
-    editorElement.nativeElement.innerHTML = testContent;
-    editorElement.nativeElement.dispatchEvent(new Event('input'));
+    editorElement.innerHTML = testContent;
+    editorElement.dispatchEvent(new Event('input'));
     
     expect(onChangeFn).toHaveBeenCalledWith(testContent);
   });
@@ -245,7 +252,7 @@ describe('WysiwygEditorComponent', () => {
     const onTouchedFn = jasmine.createSpy('onTouched');
     component.registerOnTouched(onTouchedFn);
     
-    editorElement.nativeElement.dispatchEvent(new Event('blur'));
+    editorElement.dispatchEvent(new Event('blur'));
     
     expect(onTouchedFn).toHaveBeenCalled();
   });
@@ -293,8 +300,8 @@ describe('WysiwygEditorComponent', () => {
 
   it('should sanitize content', () => {
     const unsafeContent = '<script>alert("XSS")</script><p>Safe content</p>';
-    editorElement.nativeElement.innerHTML = unsafeContent;
-    editorElement.nativeElement.dispatchEvent(new Event('input'));
+    editorElement.innerHTML = unsafeContent;
+    editorElement.dispatchEvent(new Event('input'));
     
     expect(component.content).toBe(unsafeContent);
     expect(component.sanitizedContent).toBeTruthy();
@@ -304,13 +311,73 @@ describe('WysiwygEditorComponent', () => {
     component.writeValue('');
     
     expect(component.content).toBe('');
-    expect(editorElement.nativeElement.innerHTML).toBe('');
+    expect(editorElement.innerHTML).toBe('');
   });
 
   it('should handle null value in writeValue', () => {
     component.writeValue(null as any);
     
     expect(component.content).toBe('');
-    expect(editorElement.nativeElement.innerHTML).toBe('');
+    expect(editorElement.innerHTML).toBe('');
+  });
+
+  it('should open padding dialog on setPadding command', () => {
+    // Create a selection first
+    const selection = window.getSelection();
+    const range = document.createRange();
+    const textNode = document.createTextNode('test');
+    editorElement.appendChild(textNode);
+    range.selectNodeContents(textNode);
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+    
+    const paddingCommand = component.defaultCommands.find(cmd => cmd.command === 'setPadding');
+    if (paddingCommand) {
+      component.executeCommand(paddingCommand);
+      expect(component.showPaddingDialog).toBe(true);
+    }
+  });
+
+  it('should apply padding to selected element', () => {
+    const testElement = document.createElement('p');
+    testElement.textContent = 'Test paragraph';
+    editorElement.appendChild(testElement);
+    
+    component.selectedElementForPadding = testElement;
+    component.paddingTop = '10';
+    component.paddingRight = '15';
+    component.paddingBottom = '20';
+    component.paddingLeft = '25';
+    
+    component.applyPadding();
+    
+    expect(testElement.style.padding).toBe('10px 15px 20px 25px');
+    expect(component.showPaddingDialog).toBe(false);
+  });
+
+  it('should close padding dialog', () => {
+    component.showPaddingDialog = true;
+    component.paddingTop = '10';
+    component.paddingRight = '15';
+    component.paddingBottom = '20';
+    component.paddingLeft = '25';
+    component.selectedElementForPadding = document.createElement('div');
+    
+    component.closePaddingDialog();
+    
+    expect(component.showPaddingDialog).toBe(false);
+    expect(component.paddingTop).toBe('0');
+    expect(component.paddingRight).toBe('0');
+    expect(component.paddingBottom).toBe('0');
+    expect(component.paddingLeft).toBe('0');
+    expect(component.selectedElementForPadding).toBeNull();
+  });
+
+  it('should extract pixel values correctly', () => {
+    const extractMethod = (component as any).extractPixelValue;
+    
+    expect(extractMethod('10px')).toBe('10');
+    expect(extractMethod('0px')).toBe('0');
+    expect(extractMethod('')).toBe('0');
   });
 });

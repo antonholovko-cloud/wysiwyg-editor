@@ -10,6 +10,7 @@ A powerful and customizable WYSIWYG HTML editor component for Angular applicatio
 - **Alignment**: Left, center, right, and justify text alignment
 - **Links and Images**: Insert and manage hyperlinks and images
 - **Colors**: Text color and background color customization
+- **Padding Controls**: Set custom padding for selected elements
 - **Additional Features**:
   - Undo/Redo functionality
   - Horizontal rules
@@ -196,11 +197,30 @@ export class MyComponent {
       { command: 'createLink', icon: '🔗', tooltip: 'Insert Link', requiresValue: true },
       { command: 'insertImage', icon: '📷', tooltip: 'Insert Image', requiresValue: true },
       { command: 'separator' },
+      { command: 'setPadding', icon: '📦', tooltip: 'Set Padding', requiresValue: true },
+      { command: 'separator' },
       { command: 'removeFormat', icon: '✖', tooltip: 'Clear Formatting' }
     ]
   };
 }
 ```
+
+### Using Padding Controls
+
+The editor includes a padding control feature that allows users to set custom padding for selected elements:
+
+1. **Select an element** in the editor (text, paragraph, heading, etc.)
+2. **Click the padding button** (📦) in the toolbar
+3. **Set padding values** for top, right, bottom, and left in the dialog
+4. **Click Apply** to apply the padding to the selected element
+
+The padding dialog provides individual controls for:
+- **Top padding** (in pixels)
+- **Right padding** (in pixels) 
+- **Bottom padding** (in pixels)
+- **Left padding** (in pixels)
+
+The padding values are applied as inline CSS styles to the selected element and will be preserved in the HTML output.
 
 ## Configuration Options
 
@@ -224,6 +244,7 @@ The following commands can be used in custom toolbar configurations:
 - **Lists**: `insertUnorderedList`, `insertOrderedList`, `indent`, `outdent`
 - **Links/Media**: `createLink`, `unlink`, `insertImage`
 - **Colors**: `foreColor`, `backColor`
+- **Layout**: `setPadding`
 - **Other**: `undo`, `redo`, `removeFormat`, `insertHorizontalRule`, `subscript`, `superscript`
 
 ## Events

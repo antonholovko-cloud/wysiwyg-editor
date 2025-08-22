@@ -24,7 +24,9 @@
         "test": {
           "builder": "@angular/build:karma",
           "options": {
-            "tsConfig": "projects/ngx-wysiwyg-editor/tsconfig.spec.json"
+            "main": "projects/ngx-wysiwyg-editor/src/test.ts",
+            "tsConfig": "projects/ngx-wysiwyg-editor/tsconfig.spec.json",
+            "karmaConfig": "projects/ngx-wysiwyg-editor/karma.conf.js"
           }
         }
       }

@@ -57,6 +57,12 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
   selectedColor = '#000000';
   showBackgroundColorPicker = false;
   selectedBackgroundColor = '#ffffff';
+  showPaddingDialog = false;
+  paddingTop = '0';
+  paddingRight = '0';
+  paddingBottom = '0';
+  paddingLeft = '0';
+  selectedElementForPadding: HTMLElement | null = null;
   
   defaultCommands: EditorCommand[] = [
     { command: 'undo', icon: '↶', tooltip: 'Undo' },
@@ -94,7 +100,9 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
     { command: 'insertHorizontalRule', icon: '―', tooltip: 'Horizontal Line' },
     { command: 'separator' },
     { command: 'subscript', icon: 'X₂', tooltip: 'Subscript' },
-    { command: 'superscript', icon: 'X²', tooltip: 'Superscript' }
+    { command: 'superscript', icon: 'X²', tooltip: 'Superscript' },
+    { command: 'separator' },
+    { command: 'setPadding', icon: '📦', tooltip: 'Set Padding', requiresValue: true }
   ];
   
   onChange: (value: string) => void = () => {};
@@ -171,6 +179,11 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
       return;
     }
     
+    if (command.command === 'setPadding') {
+      this.openPaddingDialog();
+      return;
+    }
+    
     document.execCommand(command.command, false, command.value);
     this.onContentChange();
   }
@@ -213,6 +226,54 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
     this.showLinkDialog = false;
     this.linkUrl = '';
     this.selectedRange = null;
+  }
+  
+  openPaddingDialog(): void {
+    const selection = window.getSelection();
+    if (selection && selection.rangeCount > 0) {
+      const range = selection.getRangeAt(0);
+      let element = range.startContainer as Node;
+      
+      // Find the closest element node
+      while (element && element.nodeType !== Node.ELEMENT_NODE) {
+        element = element.parentNode!;
+      }
+      
+      if (element && element.nodeType === Node.ELEMENT_NODE) {
+        this.selectedElementForPadding = element as HTMLElement;
+        
+        // Get current padding values
+        const computedStyle = window.getComputedStyle(this.selectedElementForPadding);
+        this.paddingTop = this.extractPixelValue(computedStyle.paddingTop);
+        this.paddingRight = this.extractPixelValue(computedStyle.paddingRight);
+        this.paddingBottom = this.extractPixelValue(computedStyle.paddingBottom);
+        this.paddingLeft = this.extractPixelValue(computedStyle.paddingLeft);
+        
+        this.showPaddingDialog = true;
+      }
+    }
+  }
+  
+  private extractPixelValue(value: string): string {
+    return value.replace('px', '') || '0';
+  }
+  
+  applyPadding(): void {
+    if (this.selectedElementForPadding) {
+      const paddingStyle = `${this.paddingTop}px ${this.paddingRight}px ${this.paddingBottom}px ${this.paddingLeft}px`;
+      this.selectedElementForPadding.style.padding = paddingStyle;
+      this.onContentChange();
+    }
+    this.closePaddingDialog();
+  }
+  
+  closePaddingDialog(): void {
+    this.showPaddingDialog = false;
+    this.paddingTop = '0';
+    this.paddingRight = '0';
+    this.paddingBottom = '0';
+    this.paddingLeft = '0';
+    this.selectedElementForPadding = null;
   }
   
   private onContentChange(): void {
