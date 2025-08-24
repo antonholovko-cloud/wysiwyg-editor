@@ -10,7 +10,7 @@
         [title]="cmd.tooltip || cmd.command"
         (click)="executeCommand(cmd)"
         type="button">
-        <span [innerHTML]="cmd.icon || cmd.command"></span>
+        <span [innerHTML]="getSafeHtml(cmd.icon || cmd.command)"></span>
       </button>
     </ng-container>
     
@@ -109,6 +109,83 @@
       <div class="padding-dialog-buttons">
         <button (click)="applyPadding()" type="button">Apply</button>
         <button (click)="closePaddingDialog()" type="button">Cancel</button>
+      </div>
+    </div>
+  </div>
+  
+  <div class="document-padding-dialog" *ngIf="showDocumentPaddingDialog">
+    <div class="document-padding-dialog-content">
+      <h3>Set Document Padding</h3>
+      <div class="padding-all-group">
+        <label for="documentPaddingAll">All sides (px):</label>
+        <input 
+          id="documentPaddingAll"
+          type="number" 
+          [(ngModel)]="documentPaddingAll" 
+          (ngModelChange)="onDocumentPaddingAllChange()"
+          min="0"
+          placeholder="Set all paddings at once">
+      </div>
+      <div class="padding-separator">or set individual paddings:</div>
+      <div class="padding-grid">
+        <div class="padding-input-group">
+          <label for="documentPaddingTop">Top (px):</label>
+          <input 
+            id="documentPaddingTop"
+            type="number" 
+            [(ngModel)]="documentPaddingTop" 
+            min="0"
+            placeholder="0">
+        </div>
+        <div class="padding-input-group">
+          <label for="documentPaddingRight">Right (px):</label>
+          <input 
+            id="documentPaddingRight"
+            type="number" 
+            [(ngModel)]="documentPaddingRight" 
+            min="0"
+            placeholder="0">
+        </div>
+        <div class="padding-input-group">
+          <label for="documentPaddingBottom">Bottom (px):</label>
+          <input 
+            id="documentPaddingBottom"
+            type="number" 
+            [(ngModel)]="documentPaddingBottom" 
+            min="0"
+            placeholder="0">
+        </div>
+        <div class="padding-input-group">
+          <label for="documentPaddingLeft">Left (px):</label>
+          <input 
+            id="documentPaddingLeft"
+            type="number" 
+            [(ngModel)]="documentPaddingLeft" 
+            min="0"
+            placeholder="0">
+        </div>
+      </div>
+      <div class="padding-dialog-buttons">
+        <button (click)="applyDocumentPadding()" type="button">Apply</button>
+        <button (click)="closeDocumentPaddingDialog()" type="button">Cancel</button>
+      </div>
+    </div>
+  </div>
+  
+  <div class="preview-dialog" *ngIf="showPreview">
+    <div class="preview-dialog-overlay" (click)="closePreview()"></div>
+    <div class="preview-dialog-content">
+      <div class="preview-header">
+        <h3>Preview</h3>
+        <button class="preview-close" (click)="closePreview()" type="button">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="preview-body">
+        <div class="preview-content" [innerHTML]="getPreviewContent()"></div>
       </div>
     </div>
   </div>
