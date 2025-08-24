@@ -58,6 +58,7 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
   showBackgroundColorPicker = false;
   selectedBackgroundColor = '#ffffff';
   showPaddingDialog = false;
+  paddingAll = '';
   paddingTop = '0';
   paddingRight = '0';
   paddingBottom = '0';
@@ -249,6 +250,15 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
         this.paddingBottom = this.extractPixelValue(computedStyle.paddingBottom);
         this.paddingLeft = this.extractPixelValue(computedStyle.paddingLeft);
         
+        // Set paddingAll to the top value if all paddings are the same
+        if (this.paddingTop === this.paddingRight && 
+            this.paddingTop === this.paddingBottom && 
+            this.paddingTop === this.paddingLeft) {
+          this.paddingAll = this.paddingTop;
+        } else {
+          this.paddingAll = '';
+        }
+        
         this.showPaddingDialog = true;
       }
     }
@@ -269,11 +279,21 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
   
   closePaddingDialog(): void {
     this.showPaddingDialog = false;
+    this.paddingAll = '';
     this.paddingTop = '0';
     this.paddingRight = '0';
     this.paddingBottom = '0';
     this.paddingLeft = '0';
     this.selectedElementForPadding = null;
+  }
+  
+  onPaddingAllChange(): void {
+    if (this.paddingAll !== '') {
+      this.paddingTop = this.paddingAll;
+      this.paddingRight = this.paddingAll;
+      this.paddingBottom = this.paddingAll;
+      this.paddingLeft = this.paddingAll;
+    }
   }
   
   private onContentChange(): void {

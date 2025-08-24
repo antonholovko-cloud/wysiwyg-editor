@@ -57,6 +57,17 @@
   <div class="padding-dialog" *ngIf="showPaddingDialog">
     <div class="padding-dialog-content">
       <h3>Set Padding</h3>
+      <div class="padding-all-group">
+        <label for="paddingAll">All sides (px):</label>
+        <input 
+          id="paddingAll"
+          type="number" 
+          [(ngModel)]="paddingAll" 
+          (ngModelChange)="onPaddingAllChange()"
+          min="0"
+          placeholder="Set all paddings at once">
+      </div>
+      <div class="padding-separator">or set individual paddings:</div>
       <div class="padding-grid">
         <div class="padding-input-group">
           <label for="paddingTop">Top (px):</label>
