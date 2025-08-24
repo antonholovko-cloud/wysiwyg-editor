@@ -1,0 +1,247 @@
+<div class="demo-container">
+  <header class="demo-header">
+    <h1>{{ title }}</h1>
+    <p>A comprehensive demonstration of the ngx-wysiwyg-editor component with all features including the new padding controls.</p>
+  </header>
+
+  <main class="demo-content">
+    
+    <!-- Basic Editor Example -->
+    <section class="demo-section">
+      <h2>Basic Editor</h2>
+      <p>Default configuration with full toolbar functionality.</p>
+      
+      <div class="editor-container">
+        <wysiwyg-editor 
+          [(ngModel)]="basicContent"
+          [config]="defaultConfig"
+          (contentChange)="onContentChange($event, 'Basic Editor')"
+          (focus)="onEditorFocus('Basic Editor')"
+          (blur)="onEditorBlur('Basic Editor')">
+        </wysiwyg-editor>
+      </div>
+      
+      <div class="demo-controls">
+        <button (click)="loadSampleContent('basicContent')" class="btn btn-secondary">Load Sample Content</button>
+        <button (click)="clearContent('basicContent')" class="btn btn-outline">Clear Content</button>
+        <button (click)="showHtmlOutput = !showHtmlOutput" class="btn btn-outline">
+          {{ showHtmlOutput ? 'Hide' : 'Show' }} HTML Output
+        </button>
+      </div>
+      
+      <div *ngIf="showHtmlOutput" class="html-output">
+        <h4>HTML Output:</h4>
+        <pre><code>{{ basicContent }}</code></pre>
+      </div>
+    </section>
+
+    <!-- Custom Toolbar Example -->
+    <section class="demo-section">
+      <h2>Custom Toolbar Configuration</h2>
+      <p>Editor with custom toolbar buttons including the new padding control.</p>
+      
+      <div class="editor-container">
+        <wysiwyg-editor 
+          [(ngModel)]="customContent"
+          [config]="customConfig"
+          (contentChange)="onContentChange($event, 'Custom Editor')"
+          (focus)="onEditorFocus('Custom Editor')"
+          (blur)="onEditorBlur('Custom Editor')">
+        </wysiwyg-editor>
+      </div>
+      
+      <div class="demo-controls">
+        <button (click)="loadSampleContent('customContent')" class="btn btn-secondary">Load Sample Content</button>
+        <button (click)="clearContent('customContent')" class="btn btn-outline">Clear Content</button>
+      </div>
+    </section>
+
+    <!-- Form Integration Example -->
+    <section class="demo-section">
+      <h2>Reactive Forms Integration</h2>
+      <p>Editor integrated with Angular reactive forms with validation.</p>
+      
+      <form [formGroup]="form" (ngSubmit)="onFormSubmit()" class="demo-form">
+        <div class="form-group">
+          <label for="title">Document Title</label>
+          <input 
+            id="title" 
+            type="text" 
+            formControlName="title" 
+            class="form-control"
+            [class.invalid]="form.get('title')?.invalid && form.get('title')?.touched">
+          <div *ngIf="form.get('title')?.invalid && form.get('title')?.touched" class="error-message">
+            Title is required.
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="content">Content</label>
+          <wysiwyg-editor 
+            formControlName="content"
+            [config]="{ height: '200px', placeholder: 'Enter document content...' }"
+            [class.invalid]="form.get('content')?.invalid && form.get('content')?.touched">
+          </wysiwyg-editor>
+          <div *ngIf="form.get('content')?.invalid && form.get('content')?.touched" class="error-message">
+            Content is required and must be at least 10 characters long.
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="description">Description</label>
+          <textarea 
+            id="description" 
+            formControlName="description" 
+            class="form-control" 
+            rows="3"
+            placeholder="Optional description..."></textarea>
+        </div>
+        
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" [disabled]="form.invalid">
+            Submit Form
+          </button>
+          <button type="button" class="btn btn-outline" (click)="form.reset()">
+            Reset Form
+          </button>
+        </div>
+        
+        <div class="form-status">
+          <p><strong>Form Status:</strong> {{ form.valid ? 'Valid' : 'Invalid' }}</p>
+          <p><strong>Form Value:</strong></p>
+          <pre>{{ form.value | json }}</pre>
+        </div>
+      </form>
+    </section>
+
+    <!-- Compact Editor Example -->
+    <section class="demo-section">
+      <h2>Compact Editor</h2>
+      <p>Minimal toolbar configuration for space-constrained environments.</p>
+      
+      <div class="editor-container">
+        <wysiwyg-editor 
+          [(ngModel)]="customContent"
+          [config]="compactConfig"
+          (contentChange)="onContentChange($event, 'Compact Editor')">
+        </wysiwyg-editor>
+      </div>
+    </section>
+
+    <!-- Read-Only Example -->
+    <section class="demo-section">
+      <h2>Read-Only Editor</h2>
+      <p>Editor in disabled state to display content without editing capabilities.</p>
+      
+      <div class="editor-container">
+        <wysiwyg-editor 
+          [(ngModel)]="readOnlyContent"
+          [disabled]="true"
+          [config]="{ height: '200px' }">
+        </wysiwyg-editor>
+      </div>
+    </section>
+
+    <!-- Padding Feature Showcase -->
+    <section class="demo-section">
+      <h2>Padding Controls Feature</h2>
+      <p>Demonstration of the new padding controls feature. Try the following:</p>
+      
+      <div class="feature-instructions">
+        <ol>
+          <li>Select any text or element in the editor below</li>
+          <li>Click the padding button (📦) in the toolbar</li>
+          <li>Set different padding values for top, right, bottom, and left</li>
+          <li>Click "Apply" to see the padding applied to the selected element</li>
+        </ol>
+      </div>
+      
+      <div class="editor-container">
+        <wysiwyg-editor 
+          [(ngModel)]="basicContent"
+          [config]="{ height: '300px', placeholder: 'Try selecting text and using the padding controls...' }"
+          (contentChange)="onContentChange($event, 'Padding Demo')">
+        </wysiwyg-editor>
+      </div>
+      
+      <div class="padding-examples">
+        <h4>Padding Examples:</h4>
+        <div class="example-box" style="padding: 5px;">5px all around</div>
+        <div class="example-box" style="padding: 10px 20px;">10px top/bottom, 20px left/right</div>
+        <div class="example-box" style="padding: 5px 10px 15px 20px;">Different values: 5px top, 10px right, 15px bottom, 20px left</div>
+      </div>
+    </section>
+
+    <!-- Features Overview -->
+    <section class="demo-section">
+      <h2>Available Features</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <h4>Text Formatting</h4>
+          <ul>
+            <li>Bold, Italic, Underline</li>
+            <li>Strikethrough</li>
+            <li>Subscript & Superscript</li>
+            <li>Clear Formatting</li>
+          </ul>
+        </div>
+        
+        <div class="feature-card">
+          <h4>Block Elements</h4>
+          <ul>
+            <li>Headings (H1, H2, H3)</li>
+            <li>Paragraphs</li>
+            <li>Ordered & Unordered Lists</li>
+            <li>Horizontal Rules</li>
+          </ul>
+        </div>
+        
+        <div class="feature-card">
+          <h4>Alignment & Layout</h4>
+          <ul>
+            <li>Left, Center, Right Align</li>
+            <li>Justify Text</li>
+            <li>Indent & Outdent</li>
+            <li><strong>Custom Padding (NEW!)</strong></li>
+          </ul>
+        </div>
+        
+        <div class="feature-card">
+          <h4>Media & Links</h4>
+          <ul>
+            <li>Insert Links</li>
+            <li>Remove Links</li>
+            <li>Insert Images</li>
+            <li>Text & Background Colors</li>
+          </ul>
+        </div>
+        
+        <div class="feature-card">
+          <h4>Editor Features</h4>
+          <ul>
+            <li>Undo & Redo</li>
+            <li>Copy & Paste</li>
+            <li>Angular Forms Integration</li>
+            <li>Customizable Toolbar</li>
+          </ul>
+        </div>
+        
+        <div class="feature-card">
+          <h4>Security & Validation</h4>
+          <ul>
+            <li>XSS Protection</li>
+            <li>HTML Sanitization</li>
+            <li>Form Validation Support</li>
+            <li>TypeScript Support</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="demo-footer">
+    <p>NGX WYSIWYG Editor Demo Application</p>
+    <p>Check the browser console for event logs and form submissions.</p>
+  </footer>
+</div>

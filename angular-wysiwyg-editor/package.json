@@ -10,7 +10,9 @@
     "build:lib": "ng build ngx-wysiwyg-editor --configuration production",
     "test:lib": "ng test ngx-wysiwyg-editor --watch=false --browsers=ChromeHeadless",
     "pack:nuget": "./scripts/pack-nuget.sh",
-    "deploy:nuget": "./scripts/deploy-nuget.sh"
+    "deploy:nuget": "./scripts/deploy-nuget.sh",
+    "serve:demo": "ng serve demo",
+    "build:demo": "ng build demo"
   },
   "prettier": {
     "printWidth": 100,
