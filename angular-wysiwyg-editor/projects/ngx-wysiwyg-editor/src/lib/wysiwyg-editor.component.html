@@ -8,7 +8,8 @@
         [class.active]="isCommandActive(cmd.command)"
         [disabled]="disabled"
         [title]="cmd.tooltip || cmd.command"
-        (click)="executeCommand(cmd)"
+        (mousedown)="$event.preventDefault(); $event.stopPropagation()"
+        (click)="executeCommand(cmd, $event); $event.preventDefault(); $event.stopPropagation()"
         type="button">
         <span [innerHTML]="getSafeHtml(cmd.icon || cmd.command)"></span>
       </button>
@@ -174,7 +175,7 @@
   
   <div class="html-dialog" *ngIf="showHtmlDialog">
     <div class="html-dialog-content">
-      <h3>Insert HTML</h3>
+      <h3>View/Edit HTML</h3>
       <textarea 
         [(ngModel)]="htmlContent" 
         placeholder="Enter HTML code here..."
@@ -182,7 +183,7 @@
         class="html-textarea">
       </textarea>
       <div class="html-dialog-buttons">
-        <button (click)="insertHtml()" [disabled]="!htmlContent" type="button">Insert</button>
+        <button (click)="insertHtml()" type="button">Apply Changes</button>
         <button (click)="closeHtmlDialog()" type="button">Cancel</button>
       </div>
     </div>

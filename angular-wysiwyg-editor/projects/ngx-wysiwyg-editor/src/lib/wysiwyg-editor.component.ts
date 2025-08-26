@@ -115,7 +115,7 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
     { command: 'setPadding', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="7" y="7" width="10" height="10" rx="1" stroke-dasharray="2 2"/></svg>', tooltip: 'Set Element Padding', requiresValue: true },
     { command: 'setDocumentPadding', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2"/><rect x="6" y="6" width="12" height="12" rx="1"/><path d="M6 2v4m12-4v4M6 18v4m12-4v4M2 6h4m12 0h4M2 18h4m12 0h4" stroke-dasharray="1 1"/></svg>', tooltip: 'Set Document Padding', requiresValue: true },
     { command: 'separator' },
-    { command: 'insertHTML', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>', tooltip: 'Insert HTML', requiresValue: true },
+    { command: 'insertHTML', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>', tooltip: 'View/Edit HTML', requiresValue: true },
     { command: 'separator' },
     { command: 'preview', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>', tooltip: 'Preview', requiresValue: false }
   ];
@@ -155,10 +155,32 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
       document.execCommand('defaultParagraphSeparator', false, this.config.defaultParagraphSeparator);
     }
     
+    // Add initial content if empty to ensure alignment commands work
+    if (!editor.innerHTML || editor.innerHTML.trim() === '') {
+      editor.innerHTML = '<p><br></p>';
+    }
+    
     editor.addEventListener('input', () => this.onContentChange());
     editor.addEventListener('blur', () => this.onBlur());
     editor.addEventListener('focus', () => this.onFocus());
     editor.addEventListener('paste', (e) => this.onPaste(e));
+    
+    // Ensure alignment commands work on empty lines
+    editor.addEventListener('keyup', (e: KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        const selection = window.getSelection();
+        if (selection && selection.rangeCount > 0) {
+          const range = selection.getRangeAt(0);
+          const node = range.startContainer;
+          if (node.nodeType === Node.TEXT_NODE && node.parentElement?.tagName === 'DIV') {
+            // Wrap text in paragraph for proper alignment
+            const p = document.createElement('p');
+            p.innerHTML = node.textContent || '<br>';
+            node.parentElement.replaceChild(p, node);
+          }
+        }
+      }
+    });
   }
   
   get commands(): EditorCommand[] {
@@ -170,8 +192,39 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
     return this.sanitizer.bypassSecurityTrustHtml(html);
   }
   
-  executeCommand(command: EditorCommand): void {
+  executeCommand(command: EditorCommand, event?: Event): void {
     if (command.command === 'separator') return;
+    
+    // Ensure editor has focus before executing commands
+    const editor = this.editorElement.nativeElement;
+    
+    // Store current selection
+    const selection = window.getSelection();
+    let savedRange: Range | null = null;
+    
+    if (selection && selection.rangeCount > 0) {
+      savedRange = selection.getRangeAt(0).cloneRange();
+    } else {
+      // Create a new range at the beginning of the editor if no selection
+      const range = document.createRange();
+      if (editor.firstChild) {
+        range.selectNodeContents(editor.firstChild);
+        range.collapse(true);
+      } else {
+        range.selectNodeContents(editor);
+        range.collapse(true);
+      }
+      savedRange = range;
+    }
+    
+    // Focus the editor and restore selection
+    editor.focus();
+    
+    // Restore the saved selection
+    if (savedRange && selection) {
+      selection.removeAllRanges();
+      selection.addRange(savedRange);
+    }
     
     if (command.command === 'createLink') {
       this.openLinkDialog();
@@ -219,17 +272,58 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
       return;
     }
     
-    document.execCommand(command.command, false, command.value);
-    this.onContentChange();
+    // Special handling for alignment commands
+    if (command.command === 'justifyLeft' || 
+        command.command === 'justifyCenter' || 
+        command.command === 'justifyRight' || 
+        command.command === 'justifyFull') {
+      
+      // Try using execCommand first
+      const result = document.execCommand(command.command, false, undefined);
+      
+      if (!result) {
+        // Fall back to custom implementation if execCommand doesn't work
+        this.applyAlignment(command.command);
+      }
+      
+      this.onContentChange();
+      return;
+      
+    } else {
+      // Execute other commands normally
+      // Ensure selection is restored before executing command
+      if (savedRange && selection) {
+        selection.removeAllRanges();
+        selection.addRange(savedRange);
+      }
+      
+      const result = document.execCommand(command.command, false, command.value);
+      
+      if (!result) {
+        // If execCommand failed, try once more with focus
+        editor.focus();
+        if (savedRange && selection) {
+          selection.removeAllRanges();
+          selection.addRange(savedRange);
+        }
+        document.execCommand(command.command, false, command.value);
+      }
+      
+      this.onContentChange();
+    }
   }
   
   applyTextColor(): void {
+    // Focus editor and restore any selection
+    this.editorElement.nativeElement.focus();
     document.execCommand('foreColor', false, this.selectedColor);
     this.showColorPicker = false;
     this.onContentChange();
   }
   
   applyBackgroundColor(): void {
+    // Focus editor and restore any selection
+    this.editorElement.nativeElement.focus();
     document.execCommand('backColor', false, this.selectedBackgroundColor);
     this.showBackgroundColorPicker = false;
     this.onContentChange();
@@ -372,38 +466,16 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
   
   openHtmlDialog(): void {
     this.showHtmlDialog = true;
-    this.htmlContent = '';
+    // Load current editor content into the HTML dialog
+    const editor = this.editorElement.nativeElement;
+    this.htmlContent = editor.innerHTML;
   }
   
   insertHtml(): void {
-    if (this.htmlContent) {
-      const selection = window.getSelection();
-      if (selection && selection.rangeCount > 0) {
-        const range = selection.getRangeAt(0);
-        range.deleteContents();
-        
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = this.htmlContent;
-        
-        const fragment = document.createDocumentFragment();
-        while (tempDiv.firstChild) {
-          fragment.appendChild(tempDiv.firstChild);
-        }
-        
-        range.insertNode(fragment);
-        
-        range.collapse(false);
-        selection.removeAllRanges();
-        selection.addRange(range);
-        
-        this.onContentChange();
-      } else {
-        const editor = this.editorElement.nativeElement;
-        const currentContent = editor.innerHTML;
-        editor.innerHTML = currentContent + this.htmlContent;
-        this.onContentChange();
-      }
-    }
+    // Replace entire editor content with the edited HTML
+    const editor = this.editorElement.nativeElement;
+    editor.innerHTML = this.htmlContent;
+    this.onContentChange();
     this.closeHtmlDialog();
   }
   
@@ -475,6 +547,144 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
   }
   
   isCommandActive(command: string): boolean {
+    if (command === 'justifyLeft' || command === 'justifyCenter' || 
+        command === 'justifyRight' || command === 'justifyFull') {
+      return this.checkAlignmentActive(command);
+    }
     return document.queryCommandState(command);
+  }
+  
+  private checkAlignmentActive(command: string): boolean {
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return false;
+    
+    let node = selection.anchorNode;
+    while (node && node !== this.editorElement.nativeElement) {
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        const element = node as HTMLElement;
+        const textAlign = element.style.textAlign || window.getComputedStyle(element).textAlign;
+        
+        switch (command) {
+          case 'justifyLeft':
+            // Only return true for left if it's explicitly set to left or if there's no alignment set at all
+            // and no other alignment is active
+            return (textAlign === 'left' || textAlign === 'start') || 
+                   (textAlign === '' && !element.style.textAlign);
+          case 'justifyCenter':
+            return textAlign === 'center';
+          case 'justifyRight':
+            return textAlign === 'right' || textAlign === 'end';
+          case 'justifyFull':
+            return textAlign === 'justify';
+        }
+      }
+      node = node.parentNode;
+    }
+    
+    // Default to left being active only if no element has alignment
+    return command === 'justifyLeft';
+  }
+  
+  private applyAlignment(command: string): void {
+    const editor = this.editorElement.nativeElement;
+    const selection = window.getSelection();
+    
+    if (!selection || selection.rangeCount === 0) {
+      // If no selection, apply to the entire editor
+      this.applyAlignmentToElement(editor, command);
+      this.onContentChange();
+      return;
+    }
+    
+    // Get all block elements in the selection
+    const range = selection.getRangeAt(0);
+    const blockElements = this.getBlockElementsInRange(range);
+    
+    if (blockElements.length === 0) {
+      // If no block elements found, try to find the parent block
+      let node = selection.anchorNode;
+      while (node && node !== editor) {
+        if (node.nodeType === Node.ELEMENT_NODE && this.isBlockElement(node as HTMLElement)) {
+          this.applyAlignmentToElement(node as HTMLElement, command);
+          break;
+        }
+        node = node.parentNode;
+      }
+    } else {
+      // Apply alignment to all block elements in selection
+      blockElements.forEach(element => {
+        this.applyAlignmentToElement(element, command);
+      });
+    }
+    
+    this.onContentChange();
+    
+    // Restore focus
+    setTimeout(() => {
+      editor.focus();
+      if (selection && range) {
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }
+    }, 0);
+  }
+  
+  private applyAlignmentToElement(element: HTMLElement, command: string): void {
+    let alignValue = '';
+    
+    switch (command) {
+      case 'justifyLeft':
+        alignValue = 'left';
+        break;
+      case 'justifyCenter':
+        alignValue = 'center';
+        break;
+      case 'justifyRight':
+        alignValue = 'right';
+        break;
+      case 'justifyFull':
+        alignValue = 'justify';
+        break;
+    }
+    
+    element.style.textAlign = alignValue;
+    
+    // Also apply to child block elements if this is the editor root
+    if (element === this.editorElement.nativeElement) {
+      const childBlocks = element.querySelectorAll('p, div, h1, h2, h3, h4, h5, h6, li');
+      childBlocks.forEach((child: Element) => {
+        (child as HTMLElement).style.textAlign = alignValue;
+      });
+    }
+  }
+  
+  private getBlockElementsInRange(range: Range): HTMLElement[] {
+    const elements: HTMLElement[] = [];
+    const editor = this.editorElement.nativeElement;
+    const walker = document.createTreeWalker(
+      editor,
+      NodeFilter.SHOW_ELEMENT,
+      {
+        acceptNode: (node) => {
+          if (this.isBlockElement(node as HTMLElement) && range.intersectsNode(node)) {
+            return NodeFilter.FILTER_ACCEPT;
+          }
+          return NodeFilter.FILTER_SKIP;
+        }
+      }
+    );
+    
+    let node = walker.nextNode();
+    while (node) {
+      elements.push(node as HTMLElement);
+      node = walker.nextNode();
+    }
+    
+    return elements;
+  }
+  
+  private isBlockElement(element: HTMLElement): boolean {
+    const blockTags = ['P', 'DIV', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'LI', 'BLOCKQUOTE', 'PRE'];
+    return blockTags.includes(element.tagName);
   }
 }
