@@ -537,6 +537,84 @@
     }
   }
   
+  .html-dialog {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    
+    .html-dialog-content {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      min-width: 500px;
+      max-width: 700px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      
+      h3 {
+        margin: 0 0 16px 0;
+        font-size: 18px;
+      }
+      
+      .html-textarea {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+        font-family: 'Courier New', monospace;
+        resize: vertical;
+        min-height: 200px;
+        
+        &:focus {
+          outline: none;
+          border-color: #007bff;
+        }
+      }
+      
+      .html-dialog-buttons {
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+        margin-top: 16px;
+        
+        button {
+          padding: 8px 16px;
+          border: 1px solid #ddd;
+          background: #f5f5f5;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 14px;
+          
+          &:first-child {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+            
+            &:hover:not(:disabled) {
+              background: #0056b3;
+            }
+            
+            &:disabled {
+              opacity: 0.5;
+              cursor: not-allowed;
+            }
+          }
+          
+          &:last-child:hover {
+            background: #e0e0e0;
+          }
+        }
+      }
+    }
+  }
+  
   .preview-dialog {
     position: fixed;
     top: 0;

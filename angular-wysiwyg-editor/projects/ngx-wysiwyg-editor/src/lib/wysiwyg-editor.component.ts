@@ -71,6 +71,8 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
   documentPaddingBottom = '12';
   documentPaddingLeft = '12';
   showPreview = false;
+  showHtmlDialog = false;
+  htmlContent = '';
   
   defaultCommands: EditorCommand[] = [
     { command: 'undo', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 00-9-9 9 9 0 00-6 2.3L3 13"/></svg>', tooltip: 'Undo' },
@@ -112,6 +114,8 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
     { command: 'separator' },
     { command: 'setPadding', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="7" y="7" width="10" height="10" rx="1" stroke-dasharray="2 2"/></svg>', tooltip: 'Set Element Padding', requiresValue: true },
     { command: 'setDocumentPadding', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2"/><rect x="6" y="6" width="12" height="12" rx="1"/><path d="M6 2v4m12-4v4M6 18v4m12-4v4M2 6h4m12 0h4M2 18h4m12 0h4" stroke-dasharray="1 1"/></svg>', tooltip: 'Set Document Padding', requiresValue: true },
+    { command: 'separator' },
+    { command: 'insertHTML', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>', tooltip: 'Insert HTML', requiresValue: true },
     { command: 'separator' },
     { command: 'preview', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>', tooltip: 'Preview', requiresValue: false }
   ];
@@ -202,6 +206,11 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
     
     if (command.command === 'setDocumentPadding') {
       this.openDocumentPaddingDialog();
+      return;
+    }
+    
+    if (command.command === 'insertHTML') {
+      this.openHtmlDialog();
       return;
     }
     
@@ -359,6 +368,48 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
       this.documentPaddingBottom = this.documentPaddingAll;
       this.documentPaddingLeft = this.documentPaddingAll;
     }
+  }
+  
+  openHtmlDialog(): void {
+    this.showHtmlDialog = true;
+    this.htmlContent = '';
+  }
+  
+  insertHtml(): void {
+    if (this.htmlContent) {
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        range.deleteContents();
+        
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = this.htmlContent;
+        
+        const fragment = document.createDocumentFragment();
+        while (tempDiv.firstChild) {
+          fragment.appendChild(tempDiv.firstChild);
+        }
+        
+        range.insertNode(fragment);
+        
+        range.collapse(false);
+        selection.removeAllRanges();
+        selection.addRange(range);
+        
+        this.onContentChange();
+      } else {
+        const editor = this.editorElement.nativeElement;
+        const currentContent = editor.innerHTML;
+        editor.innerHTML = currentContent + this.htmlContent;
+        this.onContentChange();
+      }
+    }
+    this.closeHtmlDialog();
+  }
+  
+  closeHtmlDialog(): void {
+    this.showHtmlDialog = false;
+    this.htmlContent = '';
   }
   
   openPreview(): void {

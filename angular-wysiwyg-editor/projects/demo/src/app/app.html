@@ -1,7 +1,7 @@
 <div class="demo-container">
   <header class="demo-header">
     <h1>{{ title }}</h1>
-    <p>A comprehensive demonstration of the ngx-wysiwyg-editor component with all features including the new padding controls.</p>
+    <p>A comprehensive demonstration of the ngx-wysiwyg-editor component with all features including HTML insertion and padding controls.</p>
   </header>
 
   <main class="demo-content">
@@ -142,10 +142,47 @@
       </div>
     </section>
 
+    <!-- HTML Insertion Feature -->
+    <section class="demo-section">
+      <h2>HTML Insertion Feature</h2>
+      <p>Insert custom HTML directly into the editor. Try adding tables, custom styled divs, or any HTML content!</p>
+      
+      <div class="feature-instructions">
+        <ol>
+          <li>Place your cursor where you want to insert HTML</li>
+          <li>Click the HTML button (&lt;/&gt;) in the toolbar</li>
+          <li>Enter your HTML code in the dialog</li>
+          <li>Click "Insert" to add it to the editor</li>
+        </ol>
+      </div>
+      
+      <div class="editor-container">
+        <wysiwyg-editor 
+          [(ngModel)]="basicContent"
+          [config]="{ height: '300px', placeholder: 'Try inserting custom HTML here...' }"
+          (contentChange)="onContentChange($event, 'HTML Insert Demo')">
+        </wysiwyg-editor>
+      </div>
+      
+      <div class="html-examples">
+        <h4>Sample HTML to Try:</h4>
+        <pre><code>&lt;table style="width: 100%; border-collapse: collapse;"&gt;
+  &lt;tr style="background-color: #f0f0f0;"&gt;
+    &lt;th style="border: 1px solid #ddd; padding: 8px;"&gt;Name&lt;/th&gt;
+    &lt;th style="border: 1px solid #ddd; padding: 8px;"&gt;Value&lt;/th&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td style="border: 1px solid #ddd; padding: 8px;"&gt;Item 1&lt;/td&gt;
+    &lt;td style="border: 1px solid #ddd; padding: 8px;"&gt;100&lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/table&gt;</code></pre>
+      </div>
+    </section>
+
     <!-- Padding Feature Showcase -->
     <section class="demo-section">
       <h2>Padding Controls Feature</h2>
-      <p>Demonstration of the new padding controls feature. Try the following:</p>
+      <p>Demonstration of the padding controls feature. Try the following:</p>
       
       <div class="feature-instructions">
         <ol>
@@ -202,7 +239,7 @@
             <li>Left, Center, Right Align</li>
             <li>Justify Text</li>
             <li>Indent & Outdent</li>
-            <li><strong>Custom Padding (NEW!)</strong></li>
+            <li><strong>Custom Padding</strong></li>
           </ul>
         </div>
         
@@ -212,6 +249,7 @@
             <li>Insert Links</li>
             <li>Remove Links</li>
             <li>Insert Images</li>
+            <li><strong>Insert HTML (NEW!)</strong></li>
             <li>Text & Background Colors</li>
           </ul>
         </div>

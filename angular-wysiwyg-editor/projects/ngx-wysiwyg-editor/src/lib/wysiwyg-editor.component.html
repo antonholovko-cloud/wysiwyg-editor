@@ -172,6 +172,22 @@
     </div>
   </div>
   
+  <div class="html-dialog" *ngIf="showHtmlDialog">
+    <div class="html-dialog-content">
+      <h3>Insert HTML</h3>
+      <textarea 
+        [(ngModel)]="htmlContent" 
+        placeholder="Enter HTML code here..."
+        rows="10"
+        class="html-textarea">
+      </textarea>
+      <div class="html-dialog-buttons">
+        <button (click)="insertHtml()" [disabled]="!htmlContent" type="button">Insert</button>
+        <button (click)="closeHtmlDialog()" type="button">Cancel</button>
+      </div>
+    </div>
+  </div>
+  
   <div class="preview-dialog" *ngIf="showPreview">
     <div class="preview-dialog-overlay" (click)="closePreview()"></div>
     <div class="preview-dialog-content">
