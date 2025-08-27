@@ -22,9 +22,12 @@
     </contentFiles>
   </metadata>
   <files>
-    <file src="dist\ngx-wysiwyg-editor\**\*" target="content\wwwroot\lib\ngx-wysiwyg-editor" />
-    <file src="dist\ngx-wysiwyg-editor\package.json" target="content" />
-    <file src="README.md" target="" />
-    <file src="LICENSE" target="" />
+    <file src="dist/ngx-wysiwyg-editor/fesm2022/ngx-wysiwyg-editor.mjs" target="content/wwwroot/lib/ngx-wysiwyg-editor/fesm2022/" />
+    <file src="dist/ngx-wysiwyg-editor/fesm2022/ngx-wysiwyg-editor.mjs.map" target="content/wwwroot/lib/ngx-wysiwyg-editor/fesm2022/" />
+    <file src="dist/ngx-wysiwyg-editor/index.d.ts" target="content/wwwroot/lib/ngx-wysiwyg-editor/" />
+    <file src="dist/ngx-wysiwyg-editor/package.json" target="content/wwwroot/lib/ngx-wysiwyg-editor/" />
+    <file src="dist/ngx-wysiwyg-editor/README.md" target="content/wwwroot/lib/ngx-wysiwyg-editor/" />
+    <file src="README.md" target="docs/" />
+    <file src="LICENSE" target="docs/" />
   </files>
 </package>

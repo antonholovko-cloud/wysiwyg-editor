@@ -556,7 +556,15 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
   
   private checkAlignmentActive(command: string): boolean {
     const selection = window.getSelection();
-    if (!selection || selection.rangeCount === 0) return false;
+    if (!selection || selection.rangeCount === 0) {
+      // Return consistent default when no selection
+      return command === 'justifyLeft';
+    }
+    
+    if (!this.editorElement) {
+      // Return consistent default when editor not initialized
+      return command === 'justifyLeft';
+    }
     
     let node = selection.anchorNode;
     while (node && node !== this.editorElement.nativeElement) {
