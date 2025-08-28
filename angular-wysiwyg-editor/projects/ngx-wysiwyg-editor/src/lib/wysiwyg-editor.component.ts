@@ -2,30 +2,31 @@ import { Component, ElementRef, EventEmitter, Input, Output, ViewChild, forwardR
 import { CommonModule } from '@angular/common';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { CdkDragDrop, moveItemInArray, DragDropModule } from '@angular/cdk/drag-drop';
 
-export interface EditorCommand {
-  command: string;
-  value?: string;
-  icon?: string;
-  tooltip?: string;
-  requiresValue?: boolean;
+export interface EmailBlock {
+  id: string;
+  type: 'header' | 'text' | 'image' | 'button' | 'divider' | 'columns' | 'social' | 'spacer' | 'video' | 'html';
+  content?: any;
+  settings?: any;
 }
 
 export interface EditorConfig {
+  theme?: 'light' | 'dark';
+  showBlockPanel?: boolean;
+  showPropertiesPanel?: boolean;
+  emailWidth?: string;
+  backgroundColor?: string;
+  fontFamily?: string;
   height?: string;
   minHeight?: string;
   maxHeight?: string;
-  placeholder?: string;
-  showToolbar?: boolean;
-  customButtons?: EditorCommand[];
-  allowedTags?: string[];
-  defaultParagraphSeparator?: string;
 }
 
 @Component({
   selector: 'wysiwyg-editor',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, DragDropModule],
   templateUrl: './wysiwyg-editor.component.html',
   styleUrls: ['./wysiwyg-editor.component.scss'],
   providers: [
@@ -38,87 +39,133 @@ export interface EditorConfig {
   encapsulation: ViewEncapsulation.None
 })
 export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, AfterViewInit {
-  @ViewChild('editor', { static: false }) editorElement!: ElementRef<HTMLDivElement>;
-  @ViewChild('linkUrlInput', { static: false }) linkUrlInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('emailCanvas', { static: false }) emailCanvas!: ElementRef<HTMLDivElement>;
   
   @Input() config: EditorConfig = {};
   @Input() disabled = false;
   
   @Output() contentChange = new EventEmitter<string>();
-  @Output() blur = new EventEmitter<void>();
-  @Output() focus = new EventEmitter<void>();
+  @Output() blockSelected = new EventEmitter<EmailBlock>();
   
+  // Editor state
+  emailBlocks: EmailBlock[] = [];
+  selectedBlock: EmailBlock | null = null;
+  selectedBlockIndex: number = -1;
   content = '';
-  sanitizedContent: SafeHtml = '';
-  showLinkDialog = false;
-  linkUrl = '';
-  selectedRange: Range | null = null;
-  showColorPicker = false;
-  selectedColor = '#000000';
-  showBackgroundColorPicker = false;
-  selectedBackgroundColor = '#ffffff';
-  showPaddingDialog = false;
-  paddingAll = '';
-  paddingTop = '0';
-  paddingRight = '0';
-  paddingBottom = '0';
-  paddingLeft = '0';
-  selectedElementForPadding: HTMLElement | null = null;
-  showDocumentPaddingDialog = false;
-  documentPaddingAll = '';
-  documentPaddingTop = '12';
-  documentPaddingRight = '12';
-  documentPaddingBottom = '12';
-  documentPaddingLeft = '12';
-  showPreview = false;
-  showHtmlDialog = false;
-  htmlContent = '';
   
-  defaultCommands: EditorCommand[] = [
-    { command: 'undo', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 00-9-9 9 9 0 00-6 2.3L3 13"/></svg>', tooltip: 'Undo' },
-    { command: 'redo', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 019-9 9 9 0 016 2.3l3 2.7"/></svg>', tooltip: 'Redo' },
-    { command: 'separator' },
-    { command: 'bold', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"></path><path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"></path></svg>', tooltip: 'Bold' },
-    { command: 'italic', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="4" x2="10" y2="4"></line><line x1="14" y1="20" x2="5" y2="20"></line><line x1="15" y1="4" x2="9" y2="20"></line></svg>', tooltip: 'Italic' },
-    { command: 'underline', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v7a6 6 0 0 0 6 6 6 6 0 0 0 6-6V3"></path><line x1="4" y1="21" x2="20" y2="21"></line></svg>', tooltip: 'Underline' },
-    { command: 'strikeThrough', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.3 4.9c-2.3-.6-4.4-1-6.2-.9-2.7 0-5.3.7-5.3 3.6 0 1.5 1.8 3.3 3.6 3.9h.2m8.2 3.7c.3.4.4.8.4 1.3 0 2.9-2.7 3.6-5.3 3.6-2.3 0-4.4-.3-6.2-.9M4 11.5h16"/></svg>', tooltip: 'Strikethrough' },
-    { command: 'separator' },
-    { command: 'formatBlock', value: 'h1', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h8m-8-6v12m8-12v12m9-12-3 8.5V20m3 0h-6"/></svg>', tooltip: 'Heading 1' },
-    { command: 'formatBlock', value: 'h2', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h8m-8-6v12m8-12v12m4-16h4a2 2 0 012 2v2a2 2 0 01-2 2h-4v8h6"/></svg>', tooltip: 'Heading 2' },
-    { command: 'formatBlock', value: 'h3', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h8m-8-6v12m8-12v12m4-16h4a2 2 0 012 2v2a2 2 0 01-2 2m0 0h-4m4 0a2 2 0 012 2v2a2 2 0 01-2 2h-4"/></svg>', tooltip: 'Heading 3' },
-    { command: 'formatBlock', value: 'p', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14m-5-14h5a4 4 0 110 8h-5"/></svg>', tooltip: 'Paragraph' },
-    { command: 'separator' },
-    { command: 'justifyLeft', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="10" x2="3" y2="10"></line><line x1="21" y1="6" x2="3" y2="6"></line><line x1="21" y1="14" x2="3" y2="14"></line><line x1="17" y1="18" x2="3" y2="18"></line></svg>', tooltip: 'Align Left' },
-    { command: 'justifyCenter', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="10" x2="3" y2="10"></line><line x1="21" y1="6" x2="7" y2="6"></line><line x1="21" y1="14" x2="7" y2="14"></line><line x1="21" y1="18" x2="3" y2="18"></line></svg>', tooltip: 'Align Center' },
-    { command: 'justifyRight', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="10" x2="3" y2="10"></line><line x1="21" y1="6" x2="3" y2="6"></line><line x1="21" y1="14" x2="3" y2="14"></line><line x1="21" y1="18" x2="7" y2="18"></line></svg>', tooltip: 'Align Right' },
-    { command: 'justifyFull', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="10" x2="3" y2="10"></line><line x1="21" y1="6" x2="3" y2="6"></line><line x1="21" y1="14" x2="3" y2="14"></line><line x1="21" y1="18" x2="3" y2="18"></line></svg>', tooltip: 'Justify' },
-    { command: 'separator' },
-    { command: 'insertUnorderedList', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>', tooltip: 'Bullet List' },
-    { command: 'insertOrderedList', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="10" y1="6" x2="21" y2="6"></line><line x1="10" y1="12" x2="21" y2="12"></line><line x1="10" y1="18" x2="21" y2="18"></line><path d="M4 6h1v4"></path><path d="M4 10h2"></path><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"></path></svg>', tooltip: 'Numbered List' },
-    { command: 'indent', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 8 7 12 3 16"></polyline><line x1="21" y1="12" x2="11" y2="12"></line><line x1="21" y1="6" x2="11" y2="6"></line><line x1="21" y1="18" x2="11" y2="18"></line></svg>', tooltip: 'Increase Indent' },
-    { command: 'outdent', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="7 8 3 12 7 16"></polyline><line x1="21" y1="12" x2="11" y2="12"></line><line x1="21" y1="6" x2="11" y2="6"></line><line x1="21" y1="18" x2="11" y2="18"></line></svg>', tooltip: 'Decrease Indent' },
-    { command: 'separator' },
-    { command: 'createLink', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>', tooltip: 'Insert Link', requiresValue: true },
-    { command: 'unlink', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18.84 12.25 1.72-1.71h-.02a5.004 5.004 0 0 0-.12-7.07 5.006 5.006 0 0 0-6.95 0l-1.72 1.71"></path><path d="m5.17 11.75-1.71 1.71a5.004 5.004 0 0 0 .12 7.07 5.006 5.006 0 0 0 6.95 0l1.71-1.71"></path><line x1="8" y1="2" x2="8" y2="5"></line><line x1="2" y1="8" x2="5" y2="8"></line><line x1="16" y1="19" x2="16" y2="22"></line><line x1="19" y1="16" x2="22" y2="16"></line></svg>', tooltip: 'Remove Link' },
-    { command: 'insertImage', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>', tooltip: 'Insert Image', requiresValue: true },
-    { command: 'separator' },
-    { command: 'foreColor', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 19h2.5l1.12-3h6.75l1.13 3H20L15 5h-4zm1 2.67L14.5 14h-5l2.5-6.33z"/><rect x="4" y="20" width="16" height="3" fill="currentColor"/></svg>', tooltip: 'Text Color', requiresValue: true },
-    { command: 'backColor', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m16.24 3.56 4.95 4.94c.78.79.78 2.05 0 2.84L12 20.53a4.01 4.01 0 0 1-5.66 0L2.81 17c-.78-.79-.78-2.05 0-2.84l10.6-10.6c.79-.78 2.05-.78 2.83 0z"/><path d="M4.91 13.08 8 16.17"/><path d="M2 20 7 15" stroke-width="3"/></svg>', tooltip: 'Background Color', requiresValue: true },
-    { command: 'separator' },
-    { command: 'removeFormat', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z"/></svg>', tooltip: 'Clear Formatting' },
-    { command: 'separator' },
-    { command: 'insertHorizontalRule', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line></svg>', tooltip: 'Horizontal Line' },
-    { command: 'separator' },
-    { command: 'subscript', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m4 5 8 8m-8 0 8-8"/><path d="M15 18h1.5c.5 0 1-.2 1.3-.6.4-.3.6-.7.6-1.2 0-.3-.1-.6-.4-.9-.2-.2-.5-.3-.8-.3-.4 0-.7.1-.9.4"/></svg>', tooltip: 'Subscript' },
-    { command: 'superscript', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m4 19 8-8m-8 0 8 8"/><path d="M15 6h1.5c.5 0 1-.2 1.3-.6.4-.3.6-.7.6-1.2 0-.3-.1-.6-.4-.9-.2-.2-.5-.3-.8-.3-.4 0-.7.1-.9.4"/></svg>', tooltip: 'Superscript' },
-    { command: 'separator' },
-    { command: 'setPadding', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="7" y="7" width="10" height="10" rx="1" stroke-dasharray="2 2"/></svg>', tooltip: 'Set Element Padding', requiresValue: true },
-    { command: 'setDocumentPadding', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2"/><rect x="6" y="6" width="12" height="12" rx="1"/><path d="M6 2v4m12-4v4M6 18v4m12-4v4M2 6h4m12 0h4M2 18h4m12 0h4" stroke-dasharray="1 1"/></svg>', tooltip: 'Set Document Padding', requiresValue: true },
-    { command: 'separator' },
-    { command: 'insertHTML', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>', tooltip: 'View/Edit HTML', requiresValue: true },
-    { command: 'separator' },
-    { command: 'preview', icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>', tooltip: 'Preview', requiresValue: false }
+  // UI state
+  showBlockPanel = true;
+  showPropertiesPanel = true;
+  activeTab: 'blocks' | 'settings' = 'blocks';
+  activePropertiesTab: 'content' | 'style' | 'advanced' = 'content';
+  isDragging = false;
+  
+  // Email settings
+  emailSettings = {
+    width: '600px',
+    backgroundColor: '#f4f4f4',
+    contentBackgroundColor: '#ffffff',
+    fontFamily: 'Arial, sans-serif',
+    fontSize: '14px',
+    textColor: '#333333',
+    linkColor: '#2196F3',
+    padding: '20px'
+  };
+  
+  // Available blocks
+  availableBlocks = [
+    { type: 'header', icon: '📰', label: 'Header', description: 'Logo and navigation' },
+    { type: 'text', icon: '📝', label: 'Text', description: 'Paragraph text block' },
+    { type: 'image', icon: '🖼️', label: 'Image', description: 'Single image' },
+    { type: 'button', icon: '🔲', label: 'Button', description: 'Call-to-action button' },
+    { type: 'divider', icon: '➖', label: 'Divider', description: 'Horizontal line' },
+    { type: 'columns', icon: '⬜', label: 'Columns', description: 'Multi-column layout' },
+    { type: 'social', icon: '👥', label: 'Social', description: 'Social media links' },
+    { type: 'spacer', icon: '⬜', label: 'Spacer', description: 'Empty space' },
+    { type: 'video', icon: '▶️', label: 'Video', description: 'Video thumbnail with link' },
+    { type: 'html', icon: '</>', label: 'HTML', description: 'Custom HTML code' }
   ];
+  
+  // Block templates
+  blockTemplates: { [key: string]: any } = {
+    header: {
+      logo: '',
+      companyName: 'Your Company',
+      tagline: 'Your tagline here',
+      backgroundColor: '#2196F3',
+      textColor: '#ffffff',
+      height: '120px',
+      alignment: 'center'
+    },
+    text: {
+      content: '<p>Enter your text content here. You can format it with <strong>bold</strong>, <em>italic</em>, and more.</p>',
+      padding: '20px',
+      fontSize: '14px',
+      lineHeight: '1.6',
+      textAlign: 'left'
+    },
+    image: {
+      src: 'https://via.placeholder.com/600x300',
+      alt: 'Image description',
+      width: '100%',
+      alignment: 'center',
+      padding: '10px',
+      link: ''
+    },
+    button: {
+      text: 'Click Here',
+      url: '#',
+      backgroundColor: '#2196F3',
+      textColor: '#ffffff',
+      borderRadius: '4px',
+      padding: '12px 24px',
+      fontSize: '16px',
+      alignment: 'center',
+      width: 'auto'
+    },
+    divider: {
+      style: 'solid',
+      width: '100%',
+      color: '#e0e0e0',
+      thickness: '1px',
+      margin: '20px 0'
+    },
+    columns: {
+      count: 2,
+      gap: '20px',
+      columns: [
+        { content: '<h3>Column 1</h3><p>This is the content for the first column. You can add any HTML content here.</p>' },
+        { content: '<h3>Column 2</h3><p>This is the content for the second column. You can add any HTML content here.</p>' }
+      ]
+    },
+    social: {
+      platforms: [
+        { name: 'facebook', url: '#', icon: '📘' },
+        { name: 'twitter', url: '#', icon: '🐦' },
+        { name: 'instagram', url: '#', icon: '📷' },
+        { name: 'linkedin', url: '#', icon: '💼' }
+      ],
+      alignment: 'center',
+      iconSize: '32px',
+      spacing: '10px'
+    },
+    spacer: {
+      height: '30px'
+    },
+    video: {
+      thumbnail: 'https://via.placeholder.com/600x340',
+      videoUrl: '#',
+      playButtonStyle: 'circle',
+      playButtonColor: '#ffffff',
+      playButtonBackground: 'rgba(0,0,0,0.7)'
+    },
+    html: {
+      code: '<!-- Enter your custom HTML here -->'
+    }
+  };
+  
+  // Property editors for each block type
+  currentBlockProperties: any = {};
   
   onChange: (value: string) => void = () => {};
   onTouched: () => void = () => {};
@@ -127,408 +174,388 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
   
   ngOnInit(): void {
     this.initializeConfig();
+    this.loadDefaultTemplate();
   }
   
   ngAfterViewInit(): void {
-    if (this.editorElement) {
-      this.setupEditor();
-    }
+    this.renderEmail();
   }
   
   private initializeConfig(): void {
     this.config = {
-      height: '400px',
-      minHeight: '200px',
-      maxHeight: '600px',
-      placeholder: 'Start typing...',
-      showToolbar: true,
-      defaultParagraphSeparator: 'p',
+      theme: 'light',
+      showBlockPanel: true,
+      showPropertiesPanel: true,
+      emailWidth: '600px',
+      backgroundColor: '#f4f4f4',
+      fontFamily: 'Arial, sans-serif',
       ...this.config
     };
+    
+    this.showBlockPanel = this.config.showBlockPanel !== false;
+    this.showPropertiesPanel = this.config.showPropertiesPanel !== false;
+    
+    if (this.config.emailWidth) {
+      this.emailSettings.width = this.config.emailWidth;
+    }
+    if (this.config.backgroundColor) {
+      this.emailSettings.backgroundColor = this.config.backgroundColor;
+    }
+    if (this.config.fontFamily) {
+      this.emailSettings.fontFamily = this.config.fontFamily;
+    }
   }
   
-  private setupEditor(): void {
-    const editor = this.editorElement.nativeElement;
-    editor.contentEditable = (!this.disabled).toString();
+  private loadDefaultTemplate(): void {
+    // Load a basic email template
+    this.emailBlocks = [
+      {
+        id: this.generateId(),
+        type: 'header',
+        content: { ...this.blockTemplates['header'] }
+      },
+      {
+        id: this.generateId(),
+        type: 'text',
+        content: {
+          ...this.blockTemplates['text'],
+          content: '<h2>Welcome to Our Newsletter!</h2><p>Thank you for subscribing. We\'re excited to share our latest updates with you.</p>'
+        }
+      },
+      {
+        id: this.generateId(),
+        type: 'button',
+        content: { ...this.blockTemplates['button'] }
+      }
+    ];
+  }
+  
+  private generateId(): string {
+    return `block_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+  
+  // Drag and drop handlers
+  onDragStarted(): void {
+    this.isDragging = true;
+  }
+  
+  onDragEnded(): void {
+    this.isDragging = false;
+  }
+  
+  drop(event: CdkDragDrop<EmailBlock[]>): void {
+    moveItemInArray(this.emailBlocks, event.previousIndex, event.currentIndex);
+    this.renderEmail();
+    this.emitChange();
+  }
+  
+  // Block management
+  addBlock(blockType: string): void {
+    // Deep clone the template for proper initialization
+    const template = JSON.parse(JSON.stringify(this.blockTemplates[blockType]));
     
-    if (this.config.defaultParagraphSeparator) {
-      document.execCommand('defaultParagraphSeparator', false, this.config.defaultParagraphSeparator);
+    const newBlock: EmailBlock = {
+      id: this.generateId(),
+      type: blockType as any,
+      content: template
+    };
+    
+    if (this.selectedBlockIndex >= 0) {
+      // Insert after selected block
+      this.emailBlocks.splice(this.selectedBlockIndex + 1, 0, newBlock);
+    } else {
+      // Add at the end
+      this.emailBlocks.push(newBlock);
     }
     
-    // Add initial content if empty to ensure alignment commands work
-    if (!editor.innerHTML || editor.innerHTML.trim() === '') {
-      editor.innerHTML = '<p><br></p>';
+    this.selectBlock(newBlock, this.emailBlocks.length - 1);
+    this.renderEmail();
+    this.emitChange();
+  }
+  
+  duplicateBlock(block: EmailBlock, index: number): void {
+    const duplicatedBlock: EmailBlock = {
+      id: this.generateId(),
+      type: block.type,
+      content: { ...block.content }
+    };
+    
+    this.emailBlocks.splice(index + 1, 0, duplicatedBlock);
+    this.renderEmail();
+    this.emitChange();
+  }
+  
+  deleteBlock(index: number): void {
+    this.emailBlocks.splice(index, 1);
+    this.selectedBlock = null;
+    this.selectedBlockIndex = -1;
+    this.renderEmail();
+    this.emitChange();
+  }
+  
+  moveBlockUp(index: number): void {
+    if (index > 0) {
+      const temp = this.emailBlocks[index];
+      this.emailBlocks[index] = this.emailBlocks[index - 1];
+      this.emailBlocks[index - 1] = temp;
+      this.selectedBlockIndex = index - 1;
+      this.renderEmail();
+      this.emitChange();
     }
+  }
+  
+  moveBlockDown(index: number): void {
+    if (index < this.emailBlocks.length - 1) {
+      const temp = this.emailBlocks[index];
+      this.emailBlocks[index] = this.emailBlocks[index + 1];
+      this.emailBlocks[index + 1] = temp;
+      this.selectedBlockIndex = index + 1;
+      this.renderEmail();
+      this.emitChange();
+    }
+  }
+  
+  selectBlock(block: EmailBlock | null, index: number): void {
+    this.selectedBlock = block;
+    this.selectedBlockIndex = index;
+    this.currentBlockProperties = block ? { ...block.content } : {};
     
-    editor.addEventListener('input', () => this.onContentChange());
-    editor.addEventListener('blur', () => this.onBlur());
-    editor.addEventListener('focus', () => this.onFocus());
-    editor.addEventListener('paste', (e) => this.onPaste(e));
+    if (block) {
+      this.blockSelected.emit(block);
+      this.showPropertiesPanel = true;
+      this.activePropertiesTab = 'content';
+    }
+  }
+  
+  // Property updates (handled by enhanced version below)
+  
+  updateEmailSetting(property: string, value: any): void {
+    (this.emailSettings as any)[property] = value;
+    this.renderEmail();
+    this.emitChange();
+  }
+  
+  // Rendering
+  renderEmail(): void {
+    if (!this.emailCanvas) return;
     
-    // Ensure alignment commands work on empty lines
-    editor.addEventListener('keyup', (e: KeyboardEvent) => {
-      if (e.key === 'Enter') {
-        const selection = window.getSelection();
-        if (selection && selection.rangeCount > 0) {
-          const range = selection.getRangeAt(0);
-          const node = range.startContainer;
-          if (node.nodeType === Node.TEXT_NODE && node.parentElement?.tagName === 'DIV') {
-            // Wrap text in paragraph for proper alignment
-            const p = document.createElement('p');
-            p.innerHTML = node.textContent || '<br>';
-            node.parentElement.replaceChild(p, node);
+    const html = this.generateEmailHtml();
+    this.content = html;
+    
+    // Update preview
+    const iframe = this.emailCanvas.nativeElement.querySelector('iframe');
+    if (iframe && iframe.contentDocument) {
+      iframe.contentDocument.open();
+      iframe.contentDocument.write(html);
+      iframe.contentDocument.close();
+    }
+  }
+  
+  private generateEmailHtml(): string {
+    const blocks = this.emailBlocks.map(block => this.renderBlock(block)).join('');
+    
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+          body {
+            margin: 0;
+            padding: 0;
+            background-color: ${this.emailSettings.backgroundColor};
+            font-family: ${this.emailSettings.fontFamily};
+            font-size: ${this.emailSettings.fontSize};
+            color: ${this.emailSettings.textColor};
           }
-        }
-      }
-    });
+          .email-container {
+            max-width: ${this.emailSettings.width};
+            margin: 0 auto;
+            background-color: ${this.emailSettings.contentBackgroundColor};
+          }
+          a { color: ${this.emailSettings.linkColor}; }
+          img { max-width: 100%; height: auto; }
+          .block-wrapper {
+            position: relative;
+            transition: all 0.3s;
+          }
+          .block-wrapper:hover {
+            outline: 2px dashed #2196F3;
+            outline-offset: -2px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="email-container">
+          ${blocks}
+        </div>
+      </body>
+      </html>
+    `;
   }
   
-  get commands(): EditorCommand[] {
-    return this.config.customButtons || this.defaultCommands;
-  }
-  
-  getSafeHtml(html: string | undefined): SafeHtml {
-    if (!html) return '';
-    return this.sanitizer.bypassSecurityTrustHtml(html);
-  }
-  
-  executeCommand(command: EditorCommand, event?: Event): void {
-    if (command.command === 'separator') return;
+  renderBlock(block: EmailBlock): string {
+    const content = block.content || {};
     
-    // Ensure editor has focus before executing commands
-    const editor = this.editorElement.nativeElement;
-    
-    // Store current selection
-    const selection = window.getSelection();
-    let savedRange: Range | null = null;
-    
-    if (selection && selection.rangeCount > 0) {
-      savedRange = selection.getRangeAt(0).cloneRange();
-    } else {
-      // Create a new range at the beginning of the editor if no selection
-      const range = document.createRange();
-      if (editor.firstChild) {
-        range.selectNodeContents(editor.firstChild);
-        range.collapse(true);
-      } else {
-        range.selectNodeContents(editor);
-        range.collapse(true);
-      }
-      savedRange = range;
-    }
-    
-    // Focus the editor and restore selection
-    editor.focus();
-    
-    // Restore the saved selection
-    if (savedRange && selection) {
-      selection.removeAllRanges();
-      selection.addRange(savedRange);
-    }
-    
-    if (command.command === 'createLink') {
-      this.openLinkDialog();
-      return;
-    }
-    
-    if (command.command === 'insertImage') {
-      const url = prompt('Enter image URL:');
-      if (url) {
-        document.execCommand('insertImage', false, url);
-        this.onContentChange();
-      }
-      return;
-    }
-    
-    if (command.command === 'foreColor') {
-      this.showColorPicker = !this.showColorPicker;
-      this.showBackgroundColorPicker = false;
-      return;
-    }
-    
-    if (command.command === 'backColor') {
-      this.showBackgroundColorPicker = !this.showBackgroundColorPicker;
-      this.showColorPicker = false;
-      return;
-    }
-    
-    if (command.command === 'setPadding') {
-      this.openPaddingDialog();
-      return;
-    }
-    
-    if (command.command === 'setDocumentPadding') {
-      this.openDocumentPaddingDialog();
-      return;
-    }
-    
-    if (command.command === 'insertHTML') {
-      this.openHtmlDialog();
-      return;
-    }
-    
-    if (command.command === 'preview') {
-      this.openPreview();
-      return;
-    }
-    
-    // Special handling for alignment commands
-    if (command.command === 'justifyLeft' || 
-        command.command === 'justifyCenter' || 
-        command.command === 'justifyRight' || 
-        command.command === 'justifyFull') {
+    switch (block.type) {
+      case 'header':
+        return `
+          <div class="block-wrapper" style="background-color: ${content.backgroundColor}; color: ${content.textColor}; text-align: ${content.alignment}; padding: 20px; min-height: ${content.height};">
+            <h1 style="margin: 0; font-size: 28px;">${content.companyName}</h1>
+            <p style="margin: 10px 0 0 0; opacity: 0.9;">${content.tagline}</p>
+          </div>
+        `;
       
-      // Try using execCommand first
-      const result = document.execCommand(command.command, false, undefined);
+      case 'text':
+        return `
+          <div class="block-wrapper" style="padding: ${content.padding}; text-align: ${content.textAlign};">
+            <div style="font-size: ${content.fontSize}; line-height: ${content.lineHeight};">
+              ${content.content}
+            </div>
+          </div>
+        `;
       
-      if (!result) {
-        // Fall back to custom implementation if execCommand doesn't work
-        this.applyAlignment(command.command);
-      }
+      case 'image':
+        return `
+          <div class="block-wrapper" style="text-align: ${content.alignment}; padding: ${content.padding};">
+            ${content.link ? `<a href="${content.link}">` : ''}
+            <img src="${content.src}" alt="${content.alt}" style="width: ${content.width}; height: auto;">
+            ${content.link ? '</a>' : ''}
+          </div>
+        `;
       
-      this.onContentChange();
-      return;
+      case 'button':
+        return `
+          <div class="block-wrapper" style="text-align: ${content.alignment}; padding: 20px;">
+            <a href="${content.url}" style="display: inline-block; background-color: ${content.backgroundColor}; color: ${content.textColor}; padding: ${content.padding}; text-decoration: none; border-radius: ${content.borderRadius}; font-size: ${content.fontSize};">
+              ${content.text}
+            </a>
+          </div>
+        `;
       
-    } else {
-      // Execute other commands normally
-      // Ensure selection is restored before executing command
-      if (savedRange && selection) {
-        selection.removeAllRanges();
-        selection.addRange(savedRange);
-      }
+      case 'divider':
+        return `
+          <div class="block-wrapper" style="padding: 0; margin: ${content.margin};">
+            <hr style="border: none; border-top: ${content.thickness} ${content.style} ${content.color}; width: ${content.width}; margin: 0 auto;">
+          </div>
+        `;
       
-      const result = document.execCommand(command.command, false, command.value);
+      case 'columns':
+        const columnWidth = `${100 / content.count}%`;
+        const gapValue = parseInt(content.gap) || 20;
+        const bgColor = content.columnBackground || '#f9f9f9';
+        const columnsList = content.columns.map((column: any) => 
+          `<div style="width: ${columnWidth}; padding: 0 ${gapValue / 2}px; display: inline-block; vertical-align: top; box-sizing: border-box; font-size: 14px;">
+            <div style="padding: 15px; background: ${bgColor}; border: 1px dashed #ddd; min-height: 100px; border-radius: 4px;">
+              ${column.content || '<p style="color: #999;">Click to edit column content</p>'}
+            </div>
+          </div>`
+        ).join('');
+        return `
+          <div class="block-wrapper" style="padding: 20px;">
+            <div style="width: 100%; font-size: 0;">
+              ${columnsList}
+            </div>
+          </div>
+        `;
       
-      if (!result) {
-        // If execCommand failed, try once more with focus
-        editor.focus();
-        if (savedRange && selection) {
-          selection.removeAllRanges();
-          selection.addRange(savedRange);
-        }
-        document.execCommand(command.command, false, command.value);
-      }
+      case 'spacer':
+        return `
+          <div class="block-wrapper" style="height: ${content.height};"></div>
+        `;
       
-      this.onContentChange();
-    }
-  }
-  
-  applyTextColor(): void {
-    // Focus editor and restore any selection
-    this.editorElement.nativeElement.focus();
-    document.execCommand('foreColor', false, this.selectedColor);
-    this.showColorPicker = false;
-    this.onContentChange();
-  }
-  
-  applyBackgroundColor(): void {
-    // Focus editor and restore any selection
-    this.editorElement.nativeElement.focus();
-    document.execCommand('backColor', false, this.selectedBackgroundColor);
-    this.showBackgroundColorPicker = false;
-    this.onContentChange();
-  }
-  
-  openLinkDialog(): void {
-    const selection = window.getSelection();
-    if (selection && selection.rangeCount > 0) {
-      this.selectedRange = selection.getRangeAt(0);
-      this.showLinkDialog = true;
-      this.linkUrl = '';
-    }
-  }
-  
-  insertLink(): void {
-    if (this.selectedRange && this.linkUrl) {
-      const selection = window.getSelection();
-      if (selection) {
-        selection.removeAllRanges();
-        selection.addRange(this.selectedRange);
-        document.execCommand('createLink', false, this.linkUrl);
-        this.onContentChange();
-      }
-    }
-    this.closeLinkDialog();
-  }
-  
-  closeLinkDialog(): void {
-    this.showLinkDialog = false;
-    this.linkUrl = '';
-    this.selectedRange = null;
-  }
-  
-  openPaddingDialog(): void {
-    const selection = window.getSelection();
-    if (selection && selection.rangeCount > 0) {
-      const range = selection.getRangeAt(0);
-      let element = range.startContainer as Node;
+      case 'video':
+        return `
+          <div class="block-wrapper" style="text-align: center; padding: 20px;">
+            <div style="position: relative; display: inline-block;">
+              <img src="${content.thumbnail}" alt="Video thumbnail" style="width: 100%; max-width: 500px; height: auto;">
+              <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 60px; height: 60px; background: ${content.playButtonBackground}; border-radius: ${content.playButtonStyle === 'circle' ? '50%' : '8px'}; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                <div style="width: 0; height: 0; border-left: 20px solid ${content.playButtonColor}; border-top: 12px solid transparent; border-bottom: 12px solid transparent; margin-left: 4px;"></div>
+              </div>
+            </div>
+          </div>
+        `;
       
-      // Find the closest element node
-      while (element && element.nodeType !== Node.ELEMENT_NODE) {
-        element = element.parentNode!;
-      }
+      case 'social':
+        const icons = content.platforms.map((platform: any) => 
+          `<a href="${platform.url}" style="text-decoration: none; margin: 0 ${content.spacing};">
+            <span style="font-size: ${content.iconSize};">${platform.icon}</span>
+          </a>`
+        ).join('');
+        return `
+          <div class="block-wrapper" style="text-align: ${content.alignment}; padding: 20px;">
+            ${icons}
+          </div>
+        `;
       
-      if (element && element.nodeType === Node.ELEMENT_NODE) {
-        this.selectedElementForPadding = element as HTMLElement;
-        
-        // Get current padding values
-        const computedStyle = window.getComputedStyle(this.selectedElementForPadding);
-        this.paddingTop = this.extractPixelValue(computedStyle.paddingTop);
-        this.paddingRight = this.extractPixelValue(computedStyle.paddingRight);
-        this.paddingBottom = this.extractPixelValue(computedStyle.paddingBottom);
-        this.paddingLeft = this.extractPixelValue(computedStyle.paddingLeft);
-        
-        // Set paddingAll to the top value if all paddings are the same
-        if (this.paddingTop === this.paddingRight && 
-            this.paddingTop === this.paddingBottom && 
-            this.paddingTop === this.paddingLeft) {
-          this.paddingAll = this.paddingTop;
-        } else {
-          this.paddingAll = '';
-        }
-        
-        this.showPaddingDialog = true;
-      }
+      case 'html':
+        return `
+          <div class="block-wrapper">
+            ${content.code}
+          </div>
+        `;
+      
+      default:
+        return '';
     }
   }
   
-  private extractPixelValue(value: string): string {
-    return value.replace('px', '') || '0';
+  // UI Actions
+  toggleBlockPanel(): void {
+    this.showBlockPanel = !this.showBlockPanel;
   }
   
-  applyPadding(): void {
-    if (this.selectedElementForPadding) {
-      const paddingStyle = `${this.paddingTop}px ${this.paddingRight}px ${this.paddingBottom}px ${this.paddingLeft}px`;
-      this.selectedElementForPadding.style.padding = paddingStyle;
-      this.onContentChange();
-    }
-    this.closePaddingDialog();
+  togglePropertiesPanel(): void {
+    this.showPropertiesPanel = !this.showPropertiesPanel;
   }
   
-  closePaddingDialog(): void {
-    this.showPaddingDialog = false;
-    this.paddingAll = '';
-    this.paddingTop = '0';
-    this.paddingRight = '0';
-    this.paddingBottom = '0';
-    this.paddingLeft = '0';
-    this.selectedElementForPadding = null;
+  exportHtml(): void {
+    const html = this.generateEmailHtml();
+    const blob = new Blob([html], { type: 'text/html' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'email-template.html';
+    a.click();
+    window.URL.revokeObjectURL(url);
   }
   
-  onPaddingAllChange(): void {
-    if (this.paddingAll !== '') {
-      this.paddingTop = this.paddingAll;
-      this.paddingRight = this.paddingAll;
-      this.paddingBottom = this.paddingAll;
-      this.paddingLeft = this.paddingAll;
+  clearAll(): void {
+    if (confirm('Are you sure you want to clear all blocks?')) {
+      this.emailBlocks = [];
+      this.selectedBlock = null;
+      this.selectedBlockIndex = -1;
+      this.renderEmail();
+      this.emitChange();
     }
   }
   
-  openDocumentPaddingDialog(): void {
-    const editor = this.editorElement.nativeElement;
-    const computedStyle = window.getComputedStyle(editor);
-    
-    this.documentPaddingTop = this.extractPixelValue(computedStyle.paddingTop);
-    this.documentPaddingRight = this.extractPixelValue(computedStyle.paddingRight);
-    this.documentPaddingBottom = this.extractPixelValue(computedStyle.paddingBottom);
-    this.documentPaddingLeft = this.extractPixelValue(computedStyle.paddingLeft);
-    
-    if (this.documentPaddingTop === this.documentPaddingRight && 
-        this.documentPaddingTop === this.documentPaddingBottom && 
-        this.documentPaddingTop === this.documentPaddingLeft) {
-      this.documentPaddingAll = this.documentPaddingTop;
-    } else {
-      this.documentPaddingAll = '';
-    }
-    
-    this.showDocumentPaddingDialog = true;
+  // Template management
+  saveTemplate(): void {
+    const template = {
+      blocks: this.emailBlocks,
+      settings: this.emailSettings,
+      timestamp: new Date().toISOString()
+    };
+    localStorage.setItem('email-template', JSON.stringify(template));
+    alert('Template saved successfully!');
   }
   
-  applyDocumentPadding(): void {
-    const editor = this.editorElement.nativeElement;
-    const paddingStyle = `${this.documentPaddingTop}px ${this.documentPaddingRight}px ${this.documentPaddingBottom}px ${this.documentPaddingLeft}px`;
-    editor.style.padding = paddingStyle;
-    this.closeDocumentPaddingDialog();
-  }
-  
-  closeDocumentPaddingDialog(): void {
-    this.showDocumentPaddingDialog = false;
-  }
-  
-  onDocumentPaddingAllChange(): void {
-    if (this.documentPaddingAll !== '') {
-      this.documentPaddingTop = this.documentPaddingAll;
-      this.documentPaddingRight = this.documentPaddingAll;
-      this.documentPaddingBottom = this.documentPaddingAll;
-      this.documentPaddingLeft = this.documentPaddingAll;
+  loadTemplate(): void {
+    const saved = localStorage.getItem('email-template');
+    if (saved) {
+      const template = JSON.parse(saved);
+      this.emailBlocks = template.blocks;
+      this.emailSettings = template.settings;
+      this.renderEmail();
+      this.emitChange();
     }
   }
   
-  openHtmlDialog(): void {
-    this.showHtmlDialog = true;
-    // Load current editor content into the HTML dialog
-    const editor = this.editorElement.nativeElement;
-    this.htmlContent = editor.innerHTML;
-  }
-  
-  insertHtml(): void {
-    // Replace entire editor content with the edited HTML
-    const editor = this.editorElement.nativeElement;
-    editor.innerHTML = this.htmlContent;
-    this.onContentChange();
-    this.closeHtmlDialog();
-  }
-  
-  closeHtmlDialog(): void {
-    this.showHtmlDialog = false;
-    this.htmlContent = '';
-  }
-  
-  openPreview(): void {
-    this.showPreview = true;
-  }
-  
-  closePreview(): void {
-    this.showPreview = false;
-  }
-  
-  getPreviewContent(): string {
-    const editor = this.editorElement.nativeElement;
-    return editor.innerHTML;
-  }
-  
-  private onContentChange(): void {
-    const editor = this.editorElement.nativeElement;
-    this.content = editor.innerHTML;
-    this.sanitizedContent = this.sanitizer.sanitize(1, this.content) || '';
-    this.onChange(this.content);
-    this.contentChange.emit(this.content);
-  }
-  
-  private onBlur(): void {
-    this.onTouched();
-    this.blur.emit();
-  }
-  
-  private onFocus(): void {
-    this.focus.emit();
-  }
-  
-  private onPaste(event: ClipboardEvent): void {
-    event.preventDefault();
-    const text = event.clipboardData?.getData('text/plain');
-    if (text) {
-      document.execCommand('insertText', false, text);
-      this.onContentChange();
-    }
-  }
-  
+  // ControlValueAccessor methods
   writeValue(value: string): void {
     this.content = value || '';
-    if (this.editorElement) {
-      this.editorElement.nativeElement.innerHTML = this.content;
-      this.sanitizedContent = this.sanitizer.sanitize(1, this.content) || '';
-    }
   }
   
   registerOnChange(fn: (value: string) => void): void {
@@ -541,158 +568,96 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
   
   setDisabledState(isDisabled: boolean): void {
     this.disabled = isDisabled;
-    if (this.editorElement) {
-      this.editorElement.nativeElement.contentEditable = (!isDisabled).toString();
-    }
   }
   
-  isCommandActive(command: string): boolean {
-    if (command === 'justifyLeft' || command === 'justifyCenter' || 
-        command === 'justifyRight' || command === 'justifyFull') {
-      return this.checkAlignmentActive(command);
-    }
-    return document.queryCommandState(command);
+  private emitChange(): void {
+    const html = this.generateEmailHtml();
+    this.onChange(html);
+    this.contentChange.emit(html);
   }
   
-  private checkAlignmentActive(command: string): boolean {
-    const selection = window.getSelection();
-    if (!selection || selection.rangeCount === 0) {
-      // Return consistent default when no selection
-      return command === 'justifyLeft';
-    }
+  // Utility methods
+  getSafeHtml(html: string): SafeHtml {
+    return this.sanitizer.bypassSecurityTrustHtml(html);
+  }
+  
+  getBlockIcon(type: string): string {
+    const block = this.availableBlocks.find(b => b.type === type);
+    return block ? block.icon : '📄';
+  }
+  
+  getBlockLabel(type: string): string {
+    const block = this.availableBlocks.find(b => b.type === type);
+    return block ? block.label : type;
+  }
+  
+  // Columns management methods
+  updateColumnsCount(newCount: number): void {
+    if (!this.selectedBlock || this.selectedBlock.type !== 'columns') return;
     
-    if (!this.editorElement) {
-      // Return consistent default when editor not initialized
-      return command === 'justifyLeft';
-    }
+    const currentColumns = this.selectedBlock.content.columns || [];
+    const newColumns = [];
     
-    let node = selection.anchorNode;
-    while (node && node !== this.editorElement.nativeElement) {
-      if (node.nodeType === Node.ELEMENT_NODE) {
-        const element = node as HTMLElement;
-        const textAlign = element.style.textAlign || window.getComputedStyle(element).textAlign;
-        
-        switch (command) {
-          case 'justifyLeft':
-            // Only return true for left if it's explicitly set to left or if there's no alignment set at all
-            // and no other alignment is active
-            return (textAlign === 'left' || textAlign === 'start') || 
-                   (textAlign === '' && !element.style.textAlign);
-          case 'justifyCenter':
-            return textAlign === 'center';
-          case 'justifyRight':
-            return textAlign === 'right' || textAlign === 'end';
-          case 'justifyFull':
-            return textAlign === 'justify';
-        }
+    // Keep existing columns and add new empty ones if needed
+    for (let i = 0; i < newCount; i++) {
+      if (i < currentColumns.length) {
+        newColumns.push(currentColumns[i]);
+      } else {
+        newColumns.push({ 
+          content: `<h3>Column ${i + 1}</h3><p>This is the content for column ${i + 1}. You can add any HTML content here.</p>` 
+        });
       }
-      node = node.parentNode;
     }
     
-    // Default to left being active only if no element has alignment
-    return command === 'justifyLeft';
+    this.selectedBlock.content.count = parseInt(newCount as any);
+    this.selectedBlock.content.columns = newColumns;
+    this.currentBlockProperties.count = newCount;
+    this.currentBlockProperties.columns = [...newColumns];
+    
+    this.renderEmail();
+    this.emitChange();
   }
   
-  private applyAlignment(command: string): void {
-    const editor = this.editorElement.nativeElement;
-    const selection = window.getSelection();
+  updateColumnContent(columnIndex: number, content: string): void {
+    if (!this.selectedBlock || this.selectedBlock.type !== 'columns') return;
     
-    if (!selection || selection.rangeCount === 0) {
-      // If no selection, apply to the entire editor
-      this.applyAlignmentToElement(editor, command);
-      this.onContentChange();
-      return;
+    if (this.selectedBlock.content.columns && this.selectedBlock.content.columns[columnIndex]) {
+      this.selectedBlock.content.columns[columnIndex].content = content;
+      this.currentBlockProperties.columns[columnIndex].content = content;
+      this.renderEmail();
+      this.emitChange();
     }
+  }
+  
+  // Social media management
+  updateSocialPlatform(platformIndex: number, property: string, value: any): void {
+    if (!this.selectedBlock || this.selectedBlock.type !== 'social') return;
     
-    // Get all block elements in the selection
-    const range = selection.getRangeAt(0);
-    const blockElements = this.getBlockElementsInRange(range);
-    
-    if (blockElements.length === 0) {
-      // If no block elements found, try to find the parent block
-      let node = selection.anchorNode;
-      while (node && node !== editor) {
-        if (node.nodeType === Node.ELEMENT_NODE && this.isBlockElement(node as HTMLElement)) {
-          this.applyAlignmentToElement(node as HTMLElement, command);
-          break;
-        }
-        node = node.parentNode;
+    if (this.selectedBlock.content.platforms && this.selectedBlock.content.platforms[platformIndex]) {
+      this.selectedBlock.content.platforms[platformIndex][property] = value;
+      this.currentBlockProperties.platforms[platformIndex][property] = value;
+      this.renderEmail();
+      this.emitChange();
+    }
+  }
+  
+  // Enhanced block property update with special handling
+  updateBlockProperty(property: string, value: any): void {
+    if (this.selectedBlock) {
+      if (!this.selectedBlock.content) {
+        this.selectedBlock.content = {};
       }
-    } else {
-      // Apply alignment to all block elements in selection
-      blockElements.forEach(element => {
-        this.applyAlignmentToElement(element, command);
-      });
-    }
-    
-    this.onContentChange();
-    
-    // Restore focus
-    setTimeout(() => {
-      editor.focus();
-      if (selection && range) {
-        selection.removeAllRanges();
-        selection.addRange(range);
+      this.selectedBlock.content[property] = value;
+      this.currentBlockProperties[property] = value;
+      
+      // Special handling for certain properties
+      if (this.selectedBlock.type === 'columns' && property === 'gap') {
+        // Ensure gap is applied to all columns
+        this.renderEmail();
       }
-    }, 0);
-  }
-  
-  private applyAlignmentToElement(element: HTMLElement, command: string): void {
-    let alignValue = '';
-    
-    switch (command) {
-      case 'justifyLeft':
-        alignValue = 'left';
-        break;
-      case 'justifyCenter':
-        alignValue = 'center';
-        break;
-      case 'justifyRight':
-        alignValue = 'right';
-        break;
-      case 'justifyFull':
-        alignValue = 'justify';
-        break;
+      
+      this.renderEmail();
+      this.emitChange();
     }
-    
-    element.style.textAlign = alignValue;
-    
-    // Also apply to child block elements if this is the editor root
-    if (element === this.editorElement.nativeElement) {
-      const childBlocks = element.querySelectorAll('p, div, h1, h2, h3, h4, h5, h6, li');
-      childBlocks.forEach((child: Element) => {
-        (child as HTMLElement).style.textAlign = alignValue;
-      });
-    }
-  }
-  
-  private getBlockElementsInRange(range: Range): HTMLElement[] {
-    const elements: HTMLElement[] = [];
-    const editor = this.editorElement.nativeElement;
-    const walker = document.createTreeWalker(
-      editor,
-      NodeFilter.SHOW_ELEMENT,
-      {
-        acceptNode: (node) => {
-          if (this.isBlockElement(node as HTMLElement) && range.intersectsNode(node)) {
-            return NodeFilter.FILTER_ACCEPT;
-          }
-          return NodeFilter.FILTER_SKIP;
-        }
-      }
-    );
-    
-    let node = walker.nextNode();
-    while (node) {
-      elements.push(node as HTMLElement);
-      node = walker.nextNode();
-    }
-    
-    return elements;
-  }
-  
-  private isBlockElement(element: HTMLElement): boolean {
-    const blockTags = ['P', 'DIV', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'LI', 'BLOCKQUOTE', 'PRE'];
-    return blockTags.includes(element.tagName);
   }
 }

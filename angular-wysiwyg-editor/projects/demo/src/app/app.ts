@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { WysiwygEditorComponent, EditorConfig, EditorCommand } from 'ngx-wysiwyg-editor';
+import { WysiwygEditorComponent, EditorConfig } from 'ngx-wysiwyg-editor';
 
 @Component({
   selector: 'app-root',
@@ -11,61 +11,35 @@ import { WysiwygEditorComponent, EditorConfig, EditorCommand } from 'ngx-wysiwyg
   styleUrl: './app.scss'
 })
 export class AppComponent {
-  title = 'WYSIWYG Editor Demo';
+  title = 'Email Template Editor Demo';
   
-  // Basic example
-  basicContent = '<h2>Welcome to the WYSIWYG Editor!</h2><p>This is a <strong>powerful</strong> and <em>customizable</em> HTML editor for Angular applications.</p>';
+  // Email template content
+  emailContent = '';
   
   // Form example
   form: FormGroup;
   
-  // Custom configuration example
-  customContent = '<h3>Custom Editor</h3><p>This editor has a custom toolbar configuration.</p>';
-  
   // Configuration examples
   defaultConfig: EditorConfig = {
-    height: '300px',
-    placeholder: 'Start typing your content here...'
-  };
-  
-  customConfig: EditorConfig = {
-    height: '250px',
-    minHeight: '200px',
-    maxHeight: '400px',
-    placeholder: 'Custom editor with limited toolbar...',
-    customButtons: [
-      { command: 'bold', icon: 'B', tooltip: 'Bold' },
-      { command: 'italic', icon: 'I', tooltip: 'Italic' },
-      { command: 'underline', icon: 'U', tooltip: 'Underline' },
-      { command: 'separator' },
-      { command: 'formatBlock', value: 'h1', icon: 'H1', tooltip: 'Heading 1' },
-      { command: 'formatBlock', value: 'h2', icon: 'H2', tooltip: 'Heading 2' },
-      { command: 'formatBlock', value: 'p', icon: '¶', tooltip: 'Paragraph' },
-      { command: 'separator' },
-      { command: 'createLink', icon: '🔗', tooltip: 'Insert Link', requiresValue: true },
-      { command: 'insertImage', icon: '🖼', tooltip: 'Insert Image', requiresValue: true },
-      { command: 'separator' },
-      { command: 'setPadding', icon: '📦', tooltip: 'Set Padding', requiresValue: true },
-      { command: 'separator' },
-      { command: 'foreColor', icon: 'A', tooltip: 'Text Color', requiresValue: true },
-      { command: 'removeFormat', icon: '✖', tooltip: 'Clear Formatting' }
-    ]
+    theme: 'light',
+    showBlockPanel: true,
+    showPropertiesPanel: true,
+    emailWidth: '600px',
+    backgroundColor: '#f4f4f4',
+    fontFamily: 'Arial, sans-serif',
+    height: '600px'
   };
   
   compactConfig: EditorConfig = {
-    height: '200px',
-    placeholder: 'Compact editor...',
-    customButtons: [
-      { command: 'bold', icon: 'B', tooltip: 'Bold' },
-      { command: 'italic', icon: 'I', tooltip: 'Italic' },
-      { command: 'separator' },
-      { command: 'createLink', icon: '🔗', tooltip: 'Insert Link', requiresValue: true },
-      { command: 'setPadding', icon: '📦', tooltip: 'Set Padding', requiresValue: true }
-    ]
+    theme: 'light',
+    showBlockPanel: true,
+    showPropertiesPanel: false,
+    emailWidth: '500px',
+    height: '400px'
   };
   
-  // Read-only content
-  readOnlyContent = '<h3>Read-Only Editor</h3><p>This editor is <strong>disabled</strong> and shows how content appears in read-only mode.</p><p style="padding: 10px 20px; background-color: #f0f8ff;">This paragraph has custom padding applied!</p>';
+  // Current selected block
+  selectedBlock: any = null;
   
   // HTML output display
   showHtmlOutput = false;
@@ -78,16 +52,22 @@ export class AppComponent {
     });
   }
   
-  onContentChange(content: string, editorName: string): void {
-    console.log(`Content changed in ${editorName}:`, content);
+  onContentChange(content: string): void {
+    this.emailContent = content;
+    console.log('Email template content changed:', content);
   }
   
-  onEditorFocus(editorName: string): void {
-    console.log(`${editorName} focused`);
+  onBlockSelected(block: any): void {
+    this.selectedBlock = block;
+    console.log('Block selected:', block);
   }
   
-  onEditorBlur(editorName: string): void {
-    console.log(`${editorName} blurred`);
+  onEditorFocus(): void {
+    console.log('Editor focused');
+  }
+  
+  onEditorBlur(): void {
+    console.log('Editor blurred');
   }
   
   onFormSubmit(): void {
@@ -103,52 +83,23 @@ export class AppComponent {
     this.showHtmlOutput = !this.showHtmlOutput;
   }
   
-  clearContent(property: string): void {
-    (this as any)[property] = '';
+  downloadTemplate(): void {
+    if (this.emailContent) {
+      const blob = new Blob([this.emailContent], { type: 'text/html' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'email-template.html';
+      a.click();
+      window.URL.revokeObjectURL(url);
+    }
   }
   
-  loadSampleContent(property: string): void {
-    const sampleContent = `
-      <h1>Sample Document</h1>
-      <p>This is a sample document with various formatting options.</p>
-      
-      <h2>Features Demonstrated:</h2>
-      <ul>
-        <li><strong>Bold text</strong></li>
-        <li><em>Italic text</em></li>
-        <li><u>Underlined text</u></li>
-        <li><s>Strikethrough text</s></li>
-      </ul>
-      
-      <h3>Lists and Alignment</h3>
-      <ol>
-        <li>Numbered list item 1</li>
-        <li>Numbered list item 2</li>
-        <li>Numbered list item 3</li>
-      </ol>
-      
-      <p style="text-align: center;">This paragraph is center-aligned.</p>
-      <p style="text-align: right;">This paragraph is right-aligned.</p>
-      
-      <h3>Links and Images</h3>
-      <p>Here's a <a href="https://angular.io">link to Angular</a>.</p>
-      
-      <h3>Custom Padding</h3>
-      <p style="padding: 15px 25px; background-color: #f9f9f9; border: 1px solid #ddd;">
-        This paragraph has custom padding: 15px top/bottom and 25px left/right.
-      </p>
-      
-      <hr>
-      
-      <p>
-        <sub>Subscript text</sub> and <sup>superscript text</sup> are also supported.
-      </p>
-      
-      <blockquote style="padding: 10px 20px; background-color: #f0f8ff; border-left: 4px solid #007bff;">
-        This is a blockquote with custom styling applied using the padding controls.
-      </blockquote>
-    `;
-    
-    (this as any)[property] = sampleContent;
+  copyHtml(): void {
+    if (this.emailContent) {
+      navigator.clipboard.writeText(this.emailContent).then(() => {
+        alert('HTML copied to clipboard!');
+      });
+    }
   }
 }
