@@ -1,6 +1,25 @@
 {
-  "name": "angular-wysiwyg-editor",
+  "name": "ngx-wysiwyg-editor",
   "version": "1.0.0",
+  "description": "A powerful and customizable WYSIWYG HTML editor for Angular applications",
+  "author": "Your Name",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/ngx-wysiwyg-editor.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/ngx-wysiwyg-editor/issues"
+  },
+  "homepage": "https://github.com/yourusername/ngx-wysiwyg-editor#readme",
+  "keywords": [
+    "angular",
+    "wysiwyg",
+    "editor",
+    "html",
+    "rich-text-editor",
+    "typescript"
+  ],
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
@@ -10,7 +29,12 @@
     "build:lib": "ng build ngx-wysiwyg-editor --configuration production",
     "test:lib": "ng test ngx-wysiwyg-editor --watch=false --browsers=ChromeHeadless",
     "pack:nuget": "./scripts/pack-nuget.sh",
-    "deploy:nuget": "./scripts/deploy-nuget.sh $NUGET_API_KEY",
+    "deploy:nuget": "./scripts/deploy-nuget.sh",
+    "update:version": "./scripts/update-version.sh",
+    "release": "./scripts/release.sh",
+    "release:publish": "./scripts/release.sh --publish",
+    "prebuild:lib": "npm run test:lib",
+    "prepublish:nuget": "npm run build:lib && npm run pack:nuget",
     "serve:demo": "ng serve demo",
     "build:demo": "ng build demo"
   },

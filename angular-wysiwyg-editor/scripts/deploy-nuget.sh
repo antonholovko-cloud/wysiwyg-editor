@@ -2,8 +2,9 @@
 
 # Deployment script for NuGet
 # Usage: ./scripts/deploy-nuget.sh [api-key] [source-url]
+# Or set NUGET_API_KEY environment variable
 
-API_KEY=$1
+API_KEY=${1:-$NUGET_API_KEY}
 SOURCE_URL=${2:-https://api.nuget.org/v3/index.json}
 
 if [ -z "$API_KEY" ]; then
