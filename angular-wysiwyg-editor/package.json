@@ -30,6 +30,8 @@
     "test:lib": "ng test ngx-wysiwyg-editor --watch=false --browsers=ChromeHeadless",
     "pack:nuget": "./scripts/pack-nuget.sh",
     "deploy:nuget": "./scripts/deploy-nuget.sh",
+    "publish:npm": "./scripts/publish-npm.sh",
+    "prepublish:npm": "npm run test:lib",
     "update:version": "./scripts/update-version.sh",
     "release": "./scripts/release.sh",
     "release:publish": "./scripts/release.sh --publish",
