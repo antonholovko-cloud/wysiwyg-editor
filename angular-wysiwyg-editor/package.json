@@ -39,8 +39,7 @@
     "prepublish:nuget": "npm run build:lib && npm run pack:nuget",
     "serve:demo": "ng serve demo",
     "build:demo": "ng build demo",
-    "deploy:demo:gh-pages": "./scripts/deploy-demo-gh-pages.sh",
-    "deploy:demo:netlify": "./scripts/deploy-demo-netlify.sh"
+    "deploy:demo:gh-pages": "./scripts/deploy-demo-gh-pages.sh"
   },
   "prettier": {
     "printWidth": 100,

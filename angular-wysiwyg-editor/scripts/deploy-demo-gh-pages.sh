@@ -29,19 +29,19 @@ REPO_NAME=$(basename -s .git "$REPO_URL")
 
 echo -e "${YELLOW}Building demo for production...${NC}"
 # Build with base href for GitHub Pages
-ng build demo --base-href "/${REPO_NAME}/"
+ng build demo --base-href "/wysiwyg-editor/"
 
 echo -e "${YELLOW}Installing gh-pages if needed...${NC}"
 if ! npm list --depth=0 gh-pages > /dev/null 2>&1; then
     npm install --save-dev gh-pages
 fi
 
-echo -e "${YELLOW}Cleaning up local gh-pages branch if it exists...${NC}"
-git branch -D gh-pages 2>/dev/null || true
+echo -e "${YELLOW}Cleaning up gh-pages cache...${NC}"
+rm -rf node_modules/.cache/gh-pages 2>/dev/null || true
 
 echo -e "${YELLOW}Deploying to GitHub Pages...${NC}"
-npx gh-pages -d dist/demo
+npx gh-pages -d dist/demo/browser -f
 
 echo -e "${GREEN}✓ Demo deployed successfully!${NC}"
-echo -e "${GREEN}View your demo at: https://antonholovko-cloud.github.io/${REPO_NAME}/${NC}"
+echo -e "${GREEN}View your demo at: https://antonholovko-cloud.github.io/wysiwyg-editor/${NC}"
 echo -e "${YELLOW}Note: It may take a few minutes for the changes to appear.${NC}"
