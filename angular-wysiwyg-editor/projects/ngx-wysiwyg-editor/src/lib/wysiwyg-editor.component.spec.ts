@@ -1,24 +1,23 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer } from '@angular/platform-browser';
-import { WysiwygEditorComponent, EditorConfig } from './wysiwyg-editor.component';
+import { DragDropModule } from '@angular/cdk/drag-drop';
+import { WysiwygEditorComponent, EditorConfig, EmailBlock } from './wysiwyg-editor.component';
 
 describe('WysiwygEditorComponent', () => {
   let component: WysiwygEditorComponent;
   let fixture: ComponentFixture<WysiwygEditorComponent>;
-  let editorElement: HTMLElement;
   let sanitizer: DomSanitizer;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [WysiwygEditorComponent, FormsModule]
+      imports: [WysiwygEditorComponent, FormsModule, DragDropModule]
     }).compileComponents();
 
     fixture = TestBed.createComponent(WysiwygEditorComponent);
     component = fixture.componentInstance;
     sanitizer = TestBed.inject(DomSanitizer);
     fixture.detectChanges();
-    editorElement = fixture.nativeElement.querySelector('.wysiwyg-editor-content');
   });
 
   it('should create', () => {
@@ -26,358 +25,475 @@ describe('WysiwygEditorComponent', () => {
   });
 
   it('should initialize with default config', () => {
-    expect(component.config.height).toBe('400px');
-    expect(component.config.minHeight).toBe('200px');
-    expect(component.config.maxHeight).toBe('600px');
-    expect(component.config.placeholder).toBe('Start typing...');
-    expect(component.config.showToolbar).toBe(true);
+    expect(component.config.theme).toBe('light');
+    expect(component.config.showBlockPanel).toBe(true);
+    expect(component.config.showPropertiesPanel).toBe(true);
+    expect(component.config.emailWidth).toBe('600px');
+    expect(component.config.backgroundColor).toBe('#f4f4f4');
+    expect(component.config.fontFamily).toBe('Arial, sans-serif');
   });
 
   it('should apply custom config', () => {
     const customConfig: EditorConfig = {
-      height: '500px',
-      placeholder: 'Custom placeholder',
-      showToolbar: false
+      theme: 'dark',
+      showBlockPanel: false,
+      showPropertiesPanel: false,
+      emailWidth: '800px',
+      backgroundColor: '#000000'
     };
     
     component.config = customConfig;
     component.ngOnInit();
     
-    expect(component.config.height).toBe('500px');
-    expect(component.config.placeholder).toBe('Custom placeholder');
-    expect(component.config.showToolbar).toBe(false);
+    expect(component.config.theme).toBe('dark');
+    expect(component.showBlockPanel).toBe(false);
+    expect(component.showPropertiesPanel).toBe(false);
+    expect(component.emailSettings.width).toBe('800px');
+    expect(component.emailSettings.backgroundColor).toBe('#000000');
   });
 
-  it('should render toolbar when showToolbar is true', () => {
-    component.config.showToolbar = true;
-    fixture.detectChanges();
+  it('should load default template on init', () => {
+    component.ngOnInit();
     
-    const toolbar = fixture.nativeElement.querySelector('.wysiwyg-toolbar');
-    expect(toolbar).toBeTruthy();
+    expect(component.emailBlocks.length).toBeGreaterThan(0);
+    expect(component.emailBlocks[0].type).toBe('header');
+    expect(component.emailBlocks[1].type).toBe('text');
+    expect(component.emailBlocks[2].type).toBe('button');
   });
 
-  it('should hide toolbar when showToolbar is false', () => {
-    component.config.showToolbar = false;
-    fixture.detectChanges();
+  it('should generate unique block IDs', () => {
+    const id1 = (component as any).generateId();
+    const id2 = (component as any).generateId();
     
-    const toolbar = fixture.nativeElement.querySelector('.wysiwyg-toolbar');
-    expect(toolbar).toBeFalsy();
+    expect(id1).toBeTruthy();
+    expect(id2).toBeTruthy();
+    expect(id1).not.toBe(id2);
   });
 
-  it('should set contentEditable based on disabled state', () => {
-    component.disabled = false;
-    component.ngAfterViewInit();
-    expect(editorElement.contentEditable).toBe('true');
+  it('should add a new block', () => {
+    const initialLength = component.emailBlocks.length;
     
-    component.setDisabledState(true);
-    expect(editorElement.contentEditable).toBe('false');
+    component.addBlock('text');
+    
+    expect(component.emailBlocks.length).toBe(initialLength + 1);
+    expect(component.emailBlocks[component.emailBlocks.length - 1].type).toBe('text');
   });
 
-  it('should emit contentChange event on content change', () => {
+  it('should duplicate a block', () => {
+    const block: EmailBlock = {
+      id: 'test-id',
+      type: 'text',
+      content: { content: 'Test content' }
+    };
+    component.emailBlocks = [block];
+    
+    component.duplicateBlock(block, 0);
+    
+    expect(component.emailBlocks.length).toBe(2);
+    expect(component.emailBlocks[1].type).toBe('text');
+    expect(component.emailBlocks[1].content.content).toBe('Test content');
+    expect(component.emailBlocks[1].id).not.toBe(block.id);
+  });
+
+  it('should delete a block', () => {
+    component.emailBlocks = [
+      { id: '1', type: 'header' },
+      { id: '2', type: 'text' },
+      { id: '3', type: 'button' }
+    ];
+    
+    component.deleteBlock(1);
+    
+    expect(component.emailBlocks.length).toBe(2);
+    expect(component.emailBlocks[0].id).toBe('1');
+    expect(component.emailBlocks[1].id).toBe('3');
+  });
+
+  it('should move block up', () => {
+    component.emailBlocks = [
+      { id: '1', type: 'header' },
+      { id: '2', type: 'text' }
+    ];
+    
+    component.moveBlockUp(1);
+    
+    expect(component.emailBlocks[0].id).toBe('2');
+    expect(component.emailBlocks[1].id).toBe('1');
+  });
+
+  it('should move block down', () => {
+    component.emailBlocks = [
+      { id: '1', type: 'header' },
+      { id: '2', type: 'text' }
+    ];
+    
+    component.moveBlockDown(0);
+    
+    expect(component.emailBlocks[0].id).toBe('2');
+    expect(component.emailBlocks[1].id).toBe('1');
+  });
+
+  it('should select a block', () => {
+    const block: EmailBlock = {
+      id: 'test-id',
+      type: 'text',
+      content: { content: 'Test' }
+    };
+    spyOn(component.blockSelected, 'emit');
+    
+    component.selectBlock(block, 0);
+    
+    expect(component.selectedBlock).toBe(block);
+    expect(component.selectedBlockIndex).toBe(0);
+    expect(component.currentBlockProperties).toEqual(block.content);
+    expect(component.blockSelected.emit).toHaveBeenCalledWith(block);
+  });
+
+  it('should toggle block panel', () => {
+    component.showBlockPanel = true;
+    
+    component.toggleBlockPanel();
+    expect(component.showBlockPanel).toBe(false);
+    
+    component.toggleBlockPanel();
+    expect(component.showBlockPanel).toBe(true);
+  });
+
+  it('should toggle properties panel', () => {
+    component.showPropertiesPanel = true;
+    
+    component.togglePropertiesPanel();
+    expect(component.showPropertiesPanel).toBe(false);
+    
+    component.togglePropertiesPanel();
+    expect(component.showPropertiesPanel).toBe(true);
+  });
+
+  it('should update email settings', () => {
+    component.updateEmailSetting('width', '700px');
+    
+    expect(component.emailSettings.width).toBe('700px');
+  });
+
+  it('should update block property', () => {
+    const block: EmailBlock = {
+      id: 'test-id',
+      type: 'text',
+      content: { content: 'Original' }
+    };
+    component.selectedBlock = block;
+    
+    component.updateBlockProperty('content', 'Updated');
+    
+    expect(block.content.content).toBe('Updated');
+  });
+
+  it('should handle columns count update', () => {
+    const block: EmailBlock = {
+      id: 'test-id',
+      type: 'columns',
+      content: {
+        count: 2,
+        columns: [
+          { content: 'Column 1' },
+          { content: 'Column 2' }
+        ]
+      }
+    };
+    component.selectedBlock = block;
+    component.currentBlockProperties = { ...block.content };
+    
+    component.updateColumnsCount(3);
+    
+    expect(block.content.count).toBe(3);
+    expect(block.content.columns.length).toBe(3);
+  });
+
+  it('should update column content', () => {
+    const block: EmailBlock = {
+      id: 'test-id',
+      type: 'columns',
+      content: {
+        count: 2,
+        columns: [
+          { content: 'Original 1' },
+          { content: 'Original 2' }
+        ]
+      }
+    };
+    component.selectedBlock = block;
+    component.currentBlockProperties = { ...block.content };
+    
+    component.updateColumnContent(0, 'Updated content');
+    
+    expect(block.content.columns[0].content).toBe('Updated content');
+  });
+
+  it('should update social platform', () => {
+    const block: EmailBlock = {
+      id: 'test-id',
+      type: 'social',
+      content: {
+        platforms: [
+          { name: 'facebook', url: '#', icon: '📘' }
+        ]
+      }
+    };
+    component.selectedBlock = block;
+    component.currentBlockProperties = { ...block.content };
+    
+    component.updateSocialPlatform(0, 'url', 'https://facebook.com');
+    
+    expect(block.content.platforms[0].url).toBe('https://facebook.com');
+  });
+
+  it('should generate email HTML', () => {
+    component.emailBlocks = [
+      {
+        id: '1',
+        type: 'header',
+        content: {
+          companyName: 'Test Company',
+          tagline: 'Test Tagline',
+          backgroundColor: '#2196F3',
+          textColor: '#ffffff',
+          height: '120px',
+          alignment: 'center'
+        }
+      }
+    ];
+    
+    const html = (component as any).generateEmailHtml();
+    
+    expect(html).toContain('Test Company');
+    expect(html).toContain('Test Tagline');
+    expect(html).toContain('<!DOCTYPE html>');
+  });
+
+  it('should render header block correctly', () => {
+    const block: EmailBlock = {
+      id: 'test-id',
+      type: 'header',
+      content: {
+        companyName: 'My Company',
+        tagline: 'My Tagline',
+        backgroundColor: '#000000',
+        textColor: '#ffffff',
+        height: '100px',
+        alignment: 'left'
+      }
+    };
+    
+    const html = component.renderBlock(block);
+    
+    expect(html).toContain('My Company');
+    expect(html).toContain('My Tagline');
+    expect(html).toContain('background-color: #000000');
+  });
+
+  it('should render text block correctly', () => {
+    const block: EmailBlock = {
+      id: 'test-id',
+      type: 'text',
+      content: {
+        content: '<p>Test paragraph</p>',
+        padding: '20px',
+        fontSize: '16px',
+        lineHeight: '1.5',
+        textAlign: 'center'
+      }
+    };
+    
+    const html = component.renderBlock(block);
+    
+    expect(html).toContain('Test paragraph');
+    expect(html).toContain('padding: 20px');
+    expect(html).toContain('font-size: 16px');
+  });
+
+  it('should render button block correctly', () => {
+    const block: EmailBlock = {
+      id: 'test-id',
+      type: 'button',
+      content: {
+        text: 'Click Me',
+        url: 'https://example.com',
+        backgroundColor: '#ff0000',
+        textColor: '#ffffff',
+        borderRadius: '5px',
+        padding: '10px 20px',
+        fontSize: '18px',
+        alignment: 'center'
+      }
+    };
+    
+    const html = component.renderBlock(block);
+    
+    expect(html).toContain('Click Me');
+    expect(html).toContain('href="https://example.com"');
+    expect(html).toContain('background-color: #ff0000');
+  });
+
+  it('should save template to localStorage', () => {
+    spyOn(localStorage, 'setItem');
+    spyOn(window, 'alert');
+    
+    component.saveTemplate();
+    
+    expect(localStorage.setItem).toHaveBeenCalledWith(
+      'email-template',
+      jasmine.any(String)
+    );
+    expect(window.alert).toHaveBeenCalledWith('Template saved successfully!');
+  });
+
+  it('should load template from localStorage', () => {
+    const template = {
+      blocks: [{ id: '1', type: 'header' as const }],
+      settings: { width: '700px' },
+      timestamp: new Date().toISOString()
+    };
+    spyOn(localStorage, 'getItem').and.returnValue(JSON.stringify(template));
+    
+    component.loadTemplate();
+    
+    expect(component.emailBlocks).toEqual(template.blocks as EmailBlock[]);
+    expect(component.emailSettings.width).toBe('700px');
+  });
+
+  it('should clear all blocks with confirmation', () => {
+    spyOn(window, 'confirm').and.returnValue(true);
+    component.emailBlocks = [
+      { id: '1', type: 'header' },
+      { id: '2', type: 'text' }
+    ];
+    component.selectedBlock = component.emailBlocks[0];
+    component.selectedBlockIndex = 0;
+    
+    component.clearAll();
+    
+    expect(component.emailBlocks.length).toBe(0);
+    expect(component.selectedBlock).toBeNull();
+    expect(component.selectedBlockIndex).toBe(-1);
+  });
+
+  it('should not clear blocks if user cancels', () => {
+    spyOn(window, 'confirm').and.returnValue(false);
+    component.emailBlocks = [
+      { id: '1', type: 'header' }
+    ];
+    
+    component.clearAll();
+    
+    expect(component.emailBlocks.length).toBe(1);
+  });
+
+  it('should export HTML', () => {
+    const clickSpy = jasmine.createSpy('click');
+    const anchor = document.createElement('a');
+    anchor.click = clickSpy;
+    spyOn(document, 'createElement').and.returnValue(anchor);
+    
+    component.exportHtml();
+    
+    expect(clickSpy).toHaveBeenCalled();
+  });
+
+  it('should emit contentChange event', () => {
     spyOn(component.contentChange, 'emit');
     
-    const testContent = '<p>Test content</p>';
-    editorElement.innerHTML = testContent;
-    editorElement.dispatchEvent(new Event('input'));
+    component.addBlock('text');
     
-    expect(component.contentChange.emit).toHaveBeenCalledWith(testContent);
+    expect(component.contentChange.emit).toHaveBeenCalled();
   });
 
-  it('should emit blur event on blur', () => {
-    spyOn(component.blur, 'emit');
+  it('should write value for ControlValueAccessor', () => {
+    const testValue = '<html>Test</html>';
     
-    editorElement.dispatchEvent(new Event('blur'));
+    component.writeValue(testValue);
     
-    expect(component.blur.emit).toHaveBeenCalled();
-  });
-
-  it('should emit focus event on focus', () => {
-    spyOn(component.focus, 'emit');
-    
-    editorElement.dispatchEvent(new Event('focus'));
-    
-    expect(component.focus.emit).toHaveBeenCalled();
-  });
-
-  it('should execute bold command', () => {
-    spyOn(document, 'execCommand');
-    
-    const boldCommand = component.defaultCommands.find(cmd => cmd.command === 'bold');
-    if (boldCommand) {
-      component.executeCommand(boldCommand);
-      expect(document.execCommand).toHaveBeenCalledWith('bold', false, undefined);
-    }
-  });
-
-  it('should execute italic command', () => {
-    spyOn(document, 'execCommand');
-    
-    const italicCommand = component.defaultCommands.find(cmd => cmd.command === 'italic');
-    if (italicCommand) {
-      component.executeCommand(italicCommand);
-      expect(document.execCommand).toHaveBeenCalledWith('italic', false, undefined);
-    }
-  });
-
-  it('should execute formatBlock command with value', () => {
-    spyOn(document, 'execCommand');
-    
-    const h1Command = component.defaultCommands.find(cmd => cmd.command === 'formatBlock' && cmd.value === 'h1');
-    if (h1Command) {
-      component.executeCommand(h1Command);
-      expect(document.execCommand).toHaveBeenCalledWith('formatBlock', false, 'h1');
-    }
-  });
-
-  it('should open link dialog on createLink command', () => {
-    // Create a selection first
-    const selection = window.getSelection();
-    const range = document.createRange();
-    const textNode = document.createTextNode('test');
-    editorElement.appendChild(textNode);
-    range.selectNodeContents(textNode);
-    selection?.removeAllRanges();
-    selection?.addRange(range);
-    
-    const linkCommand = component.defaultCommands.find(cmd => cmd.command === 'createLink');
-    if (linkCommand) {
-      component.executeCommand(linkCommand);
-      expect(component.showLinkDialog).toBe(true);
-    }
-  });
-
-  it('should insert link with URL', () => {
-    spyOn(document, 'execCommand');
-    
-    const selection = window.getSelection();
-    const range = document.createRange();
-    selection?.removeAllRanges();
-    selection?.addRange(range);
-    
-    component.selectedRange = range;
-    component.linkUrl = 'https://example.com';
-    component.insertLink();
-    
-    expect(document.execCommand).toHaveBeenCalledWith('createLink', false, 'https://example.com');
-    expect(component.showLinkDialog).toBe(false);
-  });
-
-  it('should close link dialog', () => {
-    component.showLinkDialog = true;
-    component.linkUrl = 'test';
-    component.selectedRange = document.createRange();
-    
-    component.closeLinkDialog();
-    
-    expect(component.showLinkDialog).toBe(false);
-    expect(component.linkUrl).toBe('');
-    expect(component.selectedRange).toBeNull();
-  });
-
-  it('should show color picker on foreColor command', () => {
-    const colorCommand = component.defaultCommands.find(cmd => cmd.command === 'foreColor');
-    if (colorCommand) {
-      component.executeCommand(colorCommand);
-      expect(component.showColorPicker).toBe(true);
-    }
-  });
-
-  it('should apply text color', () => {
-    spyOn(document, 'execCommand');
-    
-    component.selectedColor = '#ff0000';
-    component.applyTextColor();
-    
-    expect(document.execCommand).toHaveBeenCalledWith('foreColor', false, '#ff0000');
-    expect(component.showColorPicker).toBe(false);
-  });
-
-  it('should show background color picker on backColor command', () => {
-    const bgColorCommand = component.defaultCommands.find(cmd => cmd.command === 'backColor');
-    if (bgColorCommand) {
-      component.executeCommand(bgColorCommand);
-      expect(component.showBackgroundColorPicker).toBe(true);
-    }
-  });
-
-  it('should apply background color', () => {
-    spyOn(document, 'execCommand');
-    
-    component.selectedBackgroundColor = '#00ff00';
-    component.applyBackgroundColor();
-    
-    expect(document.execCommand).toHaveBeenCalledWith('backColor', false, '#00ff00');
-    expect(component.showBackgroundColorPicker).toBe(false);
-  });
-
-  it('should handle paste event and insert plain text', () => {
-    spyOn(document, 'execCommand');
-    
-    const pasteEvent = new ClipboardEvent('paste', {
-      clipboardData: new DataTransfer()
-    });
-    
-    Object.defineProperty(pasteEvent.clipboardData, 'getData', {
-      value: () => 'Pasted text'
-    });
-    
-    spyOn(pasteEvent, 'preventDefault');
-    
-    editorElement.dispatchEvent(pasteEvent);
-    
-    expect(pasteEvent.preventDefault).toHaveBeenCalled();
-    expect(document.execCommand).toHaveBeenCalledWith('insertText', false, 'Pasted text');
-  });
-
-  it('should write value to editor', () => {
-    const testHtml = '<p>Test HTML content</p>';
-    component.writeValue(testHtml);
-    
-    expect(component.content).toBe(testHtml);
-    expect(editorElement.innerHTML).toBe(testHtml);
+    expect(component.content).toBe(testValue);
   });
 
   it('should register onChange callback', () => {
     const onChangeFn = jasmine.createSpy('onChange');
+    
     component.registerOnChange(onChangeFn);
+    component.addBlock('text');
     
-    const testContent = '<p>New content</p>';
-    editorElement.innerHTML = testContent;
-    editorElement.dispatchEvent(new Event('input'));
-    
-    expect(onChangeFn).toHaveBeenCalledWith(testContent);
+    expect(onChangeFn).toHaveBeenCalled();
   });
 
   it('should register onTouched callback', () => {
     const onTouchedFn = jasmine.createSpy('onTouched');
+    
     component.registerOnTouched(onTouchedFn);
     
-    editorElement.dispatchEvent(new Event('blur'));
-    
-    expect(onTouchedFn).toHaveBeenCalled();
+    expect(component.onTouched).toBe(onTouchedFn);
   });
 
-  it('should check if command is active', () => {
-    spyOn(document, 'queryCommandState').and.returnValue(true);
+  it('should set disabled state', () => {
+    component.setDisabledState(true);
+    expect(component.disabled).toBe(true);
     
-    const isActive = component.isCommandActive('bold');
-    
-    expect(document.queryCommandState).toHaveBeenCalledWith('bold');
-    expect(isActive).toBe(true);
+    component.setDisabledState(false);
+    expect(component.disabled).toBe(false);
   });
 
-  it('should not execute separator command', () => {
-    spyOn(document, 'execCommand');
+  it('should get safe HTML', () => {
+    const html = '<p>Test</p>';
+    spyOn(sanitizer, 'bypassSecurityTrustHtml');
     
-    const separatorCommand = { command: 'separator' };
-    component.executeCommand(separatorCommand);
+    component.getSafeHtml(html);
     
-    expect(document.execCommand).not.toHaveBeenCalled();
+    expect(sanitizer.bypassSecurityTrustHtml).toHaveBeenCalledWith(html);
   });
 
-  it('should prompt for image URL on insertImage command', () => {
-    spyOn(window, 'prompt').and.returnValue('https://example.com/image.jpg');
-    spyOn(document, 'execCommand');
-    
-    const imageCommand = component.defaultCommands.find(cmd => cmd.command === 'insertImage');
-    if (imageCommand) {
-      component.executeCommand(imageCommand);
-      expect(window.prompt).toHaveBeenCalledWith('Enter image URL:');
-      expect(document.execCommand).toHaveBeenCalledWith('insertImage', false, 'https://example.com/image.jpg');
-    }
+  it('should get block icon', () => {
+    expect(component.getBlockIcon('header')).toBe('📰');
+    expect(component.getBlockIcon('text')).toBe('📝');
+    expect(component.getBlockIcon('unknown')).toBe('📄');
   });
 
-  it('should handle null prompt response for image', () => {
-    spyOn(window, 'prompt').and.returnValue(null);
-    spyOn(document, 'execCommand');
-    
-    const imageCommand = component.defaultCommands.find(cmd => cmd.command === 'insertImage');
-    if (imageCommand) {
-      component.executeCommand(imageCommand);
-      expect(document.execCommand).not.toHaveBeenCalled();
-    }
+  it('should get block label', () => {
+    expect(component.getBlockLabel('header')).toBe('Header');
+    expect(component.getBlockLabel('text')).toBe('Text');
+    expect(component.getBlockLabel('unknown')).toBe('unknown');
   });
 
-  it('should sanitize content', () => {
-    const unsafeContent = '<script>alert("XSS")</script><p>Safe content</p>';
-    editorElement.innerHTML = unsafeContent;
-    editorElement.dispatchEvent(new Event('input'));
+  it('should handle drag start', () => {
+    component.onDragStarted();
     
-    expect(component.content).toBe(unsafeContent);
-    expect(component.sanitizedContent).toBeTruthy();
+    expect(component.isDragging).toBe(true);
   });
 
-  it('should handle empty value in writeValue', () => {
-    component.writeValue('');
+  it('should handle drag end', () => {
+    component.isDragging = true;
     
-    expect(component.content).toBe('');
-    expect(editorElement.innerHTML).toBe('');
+    component.onDragEnded();
+    
+    expect(component.isDragging).toBe(false);
   });
 
-  it('should handle null value in writeValue', () => {
-    component.writeValue(null as any);
+  it('should not move block up if at start', () => {
+    component.emailBlocks = [
+      { id: '1', type: 'header' },
+      { id: '2', type: 'text' }
+    ];
     
-    expect(component.content).toBe('');
-    expect(editorElement.innerHTML).toBe('');
+    component.moveBlockUp(0);
+    
+    expect(component.emailBlocks[0].id).toBe('1');
   });
 
-  it('should open padding dialog on setPadding command', () => {
-    // Create a selection first
-    const selection = window.getSelection();
-    const range = document.createRange();
-    const textNode = document.createTextNode('test');
-    editorElement.appendChild(textNode);
-    range.selectNodeContents(textNode);
-    selection?.removeAllRanges();
-    selection?.addRange(range);
+  it('should not move block down if at end', () => {
+    component.emailBlocks = [
+      { id: '1', type: 'header' },
+      { id: '2', type: 'text' }
+    ];
     
-    const paddingCommand = component.defaultCommands.find(cmd => cmd.command === 'setPadding');
-    if (paddingCommand) {
-      component.executeCommand(paddingCommand);
-      expect(component.showPaddingDialog).toBe(true);
-    }
-  });
-
-  it('should apply padding to selected element', () => {
-    const testElement = document.createElement('p');
-    testElement.textContent = 'Test paragraph';
-    editorElement.appendChild(testElement);
+    component.moveBlockDown(1);
     
-    component.selectedElementForPadding = testElement;
-    component.paddingTop = '10';
-    component.paddingRight = '15';
-    component.paddingBottom = '20';
-    component.paddingLeft = '25';
-    
-    component.applyPadding();
-    
-    expect(testElement.style.padding).toBe('10px 15px 20px 25px');
-    expect(component.showPaddingDialog).toBe(false);
-  });
-
-  it('should close padding dialog', () => {
-    component.showPaddingDialog = true;
-    component.paddingTop = '10';
-    component.paddingRight = '15';
-    component.paddingBottom = '20';
-    component.paddingLeft = '25';
-    component.selectedElementForPadding = document.createElement('div');
-    
-    component.closePaddingDialog();
-    
-    expect(component.showPaddingDialog).toBe(false);
-    expect(component.paddingTop).toBe('0');
-    expect(component.paddingRight).toBe('0');
-    expect(component.paddingBottom).toBe('0');
-    expect(component.paddingLeft).toBe('0');
-    expect(component.selectedElementForPadding).toBeNull();
-  });
-
-  it('should extract pixel values correctly', () => {
-    const extractMethod = (component as any).extractPixelValue;
-    
-    expect(extractMethod('10px')).toBe('10');
-    expect(extractMethod('0px')).toBe('0');
-    expect(extractMethod('')).toBe('0');
+    expect(component.emailBlocks[1].id).toBe('2');
   });
 });
