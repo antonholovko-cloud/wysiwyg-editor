@@ -1,0 +1,188 @@
+<div class="demo-container">
+  <header class="demo-header">
+    <h1>{{ title }}</h1>
+    <p>A Campaigns-style email template builder with drag & drop blocks, visual editing, and real-time preview.</p>
+  </header>
+
+  <main class="demo-content">
+
+    <!-- Main Email Editor -->
+    <section class="demo-section full-height">
+      <div class="editor-wrapper">
+        <wysiwyg-editor
+          [(ngModel)]="emailContent"
+          [config]="defaultConfig"
+          (contentChange)="onContentChange($event)"
+          (blockSelected)="onBlockSelected($event)">
+        </wysiwyg-editor>
+      </div>
+    </section>
+
+    <!-- Output Section -->
+    <section class="demo-section" *ngIf="emailContent">
+      <div class="output-controls">
+        <h3>Generated Email Template</h3>
+        <div class="control-buttons">
+          <button (click)="showHtmlOutput = !showHtmlOutput" class="btn btn-outline">
+            {{ showHtmlOutput ? 'Hide' : 'Show' }} HTML Source
+          </button>
+          <button (click)="downloadTemplate()" class="btn btn-primary">
+            Download Template
+          </button>
+          <button (click)="copyHtml()" class="btn btn-secondary">
+            Copy HTML
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="showHtmlOutput" class="html-output">
+        <h4>HTML Source Code:</h4>
+        <pre><code>{{ emailContent }}</code></pre>
+      </div>
+    </section>
+
+    <!-- Compact Editor Example -->
+    <section class="demo-section">
+      <h2>Compact Configuration</h2>
+      <p>A more compact version perfect for embedding within pages. Properties panel is hidden by default and the overall height is reduced.</p>
+
+      <div class="editor-container compact">
+        <wysiwyg-editor
+          [(ngModel)]="emailContent"
+          [config]="compactConfig"
+          (contentChange)="onContentChange($event)"
+          (blockSelected)="onBlockSelected($event)">
+        </wysiwyg-editor>
+      </div>
+
+      <div class="compact-features">
+        <h4>Compact Mode Features:</h4>
+        <ul>
+          <li><strong>Fixed Height:</strong> 400px height perfect for embedding</li>
+          <li><strong>Hidden Properties Panel:</strong> More focus on the canvas area</li>
+          <li><strong>Smaller Email Canvas:</strong> 500px max-width for compact layout</li>
+          <li><strong>Reduced Padding:</strong> Optimized spacing for smaller containers</li>
+          <li><strong>Configurable:</strong> Height and panels can be customized via config</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Features Overview -->
+    <section class="demo-section">
+      <h2>Email Template Features</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <h4>📰 Header Block</h4>
+          <p>Company logo, name, and tagline with customizable colors and alignment.</p>
+        </div>
+
+        <div class="feature-card">
+          <h4>📝 Text Block</h4>
+          <p>Rich text content with HTML formatting, fonts, colors, and alignment options.</p>
+        </div>
+
+        <div class="feature-card">
+          <h4>🖼️ Image Block</h4>
+          <p>Responsive images with optional links, alt text, and alignment controls.</p>
+        </div>
+
+        <div class="feature-card">
+          <h4>🔲 Button Block</h4>
+          <p>Call-to-action buttons with custom text, colors, borders, and links.</p>
+        </div>
+
+        <div class="feature-card">
+          <h4>➖ Divider Block</h4>
+          <p>Horizontal separators with customizable style, color, and thickness.</p>
+        </div>
+
+        <div class="feature-card">
+          <h4>⬜ Spacer Block</h4>
+          <p>Adjustable vertical spacing to control layout and visual hierarchy.</p>
+        </div>
+
+        <div class="feature-card">
+          <h4>👥 Social Block</h4>
+          <p>Social media icons and links for Facebook, Twitter, Instagram, LinkedIn.</p>
+        </div>
+
+        <div class="feature-card">
+          <h4>&lt;/&gt; HTML Block</h4>
+          <p>Custom HTML code insertion for advanced layouts and integrations.</p>
+        </div>
+
+        <div class="feature-card">
+          <h4>🎨 Visual Editor</h4>
+          <p>Drag & drop interface with real-time preview and block management.</p>
+        </div>
+
+        <div class="feature-card">
+          <h4>⚙️ Properties Panel</h4>
+          <p>Comprehensive styling options with content, style, and advanced tabs.</p>
+        </div>
+
+        <div class="feature-card">
+          <h4>📱 Responsive Design</h4>
+          <p>Mobile-friendly templates that work across all email clients.</p>
+        </div>
+
+        <div class="feature-card">
+          <h4>💾 Template Management</h4>
+          <p>Save, load, and export templates with full HTML generation.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Usage Instructions -->
+    <section class="demo-section">
+      <h2>How to Use</h2>
+      <div class="instructions-grid">
+        <div class="instruction-step">
+          <div class="step-number">1</div>
+          <div class="step-content">
+            <h4>Add Blocks</h4>
+            <p>Click on blocks in the left panel to add them to your email template. Each block serves a specific purpose in your email layout.</p>
+          </div>
+        </div>
+
+        <div class="instruction-step">
+          <div class="step-number">2</div>
+          <div class="step-content">
+            <h4>Customize Content</h4>
+            <p>Select any block in the canvas to edit its content and properties in the right panel. Modify text, images, colors, and more.</p>
+          </div>
+        </div>
+
+        <div class="instruction-step">
+          <div class="step-number">3</div>
+          <div class="step-content">
+            <h4>Drag & Reorder</h4>
+            <p>Drag blocks up and down to reorder them. Use the action buttons (up/down arrows) for precise positioning.</p>
+          </div>
+        </div>
+
+        <div class="instruction-step">
+          <div class="step-number">4</div>
+          <div class="step-content">
+            <h4>Style Your Email</h4>
+            <p>Use the Settings tab to customize global email settings like width, background colors, and default fonts.</p>
+          </div>
+        </div>
+
+        <div class="instruction-step">
+          <div class="step-number">5</div>
+          <div class="step-content">
+            <h4>Export Template</h4>
+            <p>Once your template is ready, export it as HTML or save it for later use. The generated HTML is email-client friendly.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="demo-footer">
+    <p>NGX WYSIWYG Email Template Editor - Campaigns Style</p>
+    <p>Built with Angular • Drag & Drop • Real-time Preview</p>
+  </footer>
+</div>

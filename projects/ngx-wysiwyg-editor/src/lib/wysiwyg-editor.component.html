@@ -1,0 +1,539 @@
+<div class="email-editor"
+     [style.height]="config.height || '600px'"
+     [style.min-height]="config.minHeight"
+     [style.max-height]="config.maxHeight">
+  <!-- Top Toolbar -->
+  <div class="editor-toolbar">
+    <div class="toolbar-left">
+      <button class="toolbar-btn" (click)="toggleBlockPanel()" [class.active]="showBlockPanel">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7"></rect>
+          <rect x="14" y="3" width="7" height="7"></rect>
+          <rect x="3" y="14" width="7" height="7"></rect>
+          <rect x="14" y="14" width="7" height="7"></rect>
+        </svg>
+        Blocks
+      </button>
+      <button class="toolbar-btn" (click)="activeTab = 'settings'">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M12 1v6m0 6v6m4.22-13.22l4.24 4.24M1.54 19.54l4.24-4.24M22.46 19.54l-4.24-4.24M1.54 4.46l4.24 4.24"></path>
+        </svg>
+        Settings
+      </button>
+    </div>
+
+    <div class="toolbar-center">
+      <span class="editor-title">Email Template Editor</span>
+    </div>
+
+    <div class="toolbar-right">
+      <button class="toolbar-btn" (click)="saveTemplate()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"></path>
+          <polyline points="17 21 17 13 7 13 7 21"></polyline>
+          <polyline points="7 3 7 8 15 8"></polyline>
+        </svg>
+        Save
+      </button>
+      <button class="toolbar-btn" (click)="loadTemplate()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        Load
+      </button>
+      <button class="toolbar-btn primary" (click)="exportHtml()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"></path>
+          <polyline points="17 8 12 3 7 8"></polyline>
+          <line x1="12" y1="3" x2="12" y2="15"></line>
+        </svg>
+        Export HTML
+      </button>
+    </div>
+  </div>
+
+  <div class="editor-main">
+    <!-- Left Panel - Blocks -->
+    <div class="blocks-panel" [class.collapsed]="!showBlockPanel">
+      <div class="panel-tabs">
+        <button class="tab-btn" [class.active]="activeTab === 'blocks'" (click)="activeTab = 'blocks'">
+          Blocks
+        </button>
+        <button class="tab-btn" [class.active]="activeTab === 'settings'" (click)="activeTab = 'settings'">
+          Settings
+        </button>
+      </div>
+
+      <!-- Blocks Tab -->
+      <div class="panel-content" *ngIf="activeTab === 'blocks'">
+        <div class="blocks-grid">
+          <div class="block-item" *ngFor="let block of availableBlocks" (click)="addBlock(block.type)">
+            <div class="block-icon">{{ block.icon }}</div>
+            <div class="block-info">
+              <div class="block-name">{{ block.label }}</div>
+              <div class="block-desc">{{ block.description }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings Tab -->
+      <div class="panel-content" *ngIf="activeTab === 'settings'">
+        <div class="settings-section">
+          <h3>Email Settings</h3>
+
+          <div class="form-group">
+            <label>Width</label>
+            <input type="text" [(ngModel)]="emailSettings.width" (change)="updateEmailSetting('width', emailSettings.width)" />
+          </div>
+
+          <div class="form-group">
+            <label>Background Color</label>
+            <div class="color-input">
+              <input type="color" [(ngModel)]="emailSettings.backgroundColor" (change)="updateEmailSetting('backgroundColor', emailSettings.backgroundColor)" />
+              <input type="text" [(ngModel)]="emailSettings.backgroundColor" (change)="updateEmailSetting('backgroundColor', emailSettings.backgroundColor)" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Content Background</label>
+            <div class="color-input">
+              <input type="color" [(ngModel)]="emailSettings.contentBackgroundColor" (change)="updateEmailSetting('contentBackgroundColor', emailSettings.contentBackgroundColor)" />
+              <input type="text" [(ngModel)]="emailSettings.contentBackgroundColor" (change)="updateEmailSetting('contentBackgroundColor', emailSettings.contentBackgroundColor)" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Font Family</label>
+            <select [(ngModel)]="emailSettings.fontFamily" (change)="updateEmailSetting('fontFamily', emailSettings.fontFamily)">
+              <option value="Arial, sans-serif">Arial</option>
+              <option value="Georgia, serif">Georgia</option>
+              <option value="Helvetica, sans-serif">Helvetica</option>
+              <option value="'Times New Roman', serif">Times New Roman</option>
+              <option value="Verdana, sans-serif">Verdana</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Text Color</label>
+            <div class="color-input">
+              <input type="color" [(ngModel)]="emailSettings.textColor" (change)="updateEmailSetting('textColor', emailSettings.textColor)" />
+              <input type="text" [(ngModel)]="emailSettings.textColor" (change)="updateEmailSetting('textColor', emailSettings.textColor)" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Link Color</label>
+            <div class="color-input">
+              <input type="color" [(ngModel)]="emailSettings.linkColor" (change)="updateEmailSetting('linkColor', emailSettings.linkColor)" />
+              <input type="text" [(ngModel)]="emailSettings.linkColor" (change)="updateEmailSetting('linkColor', emailSettings.linkColor)" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Center - Email Canvas -->
+    <div class="email-canvas-container">
+      <div class="canvas-header">
+        <div class="device-selector">
+          <button class="device-btn active">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+              <line x1="12" y1="18" x2="12" y2="18"></line>
+            </svg>
+          </button>
+          <button class="device-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect>
+              <line x1="12" y1="18" x2="12" y2="18"></line>
+            </svg>
+          </button>
+          <button class="device-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+              <line x1="8" y1="21" x2="16" y2="21"></line>
+              <line x1="12" y1="17" x2="12" y2="21"></line>
+            </svg>
+          </button>
+        </div>
+
+        <button class="clear-btn" (click)="clearAll()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"></path>
+          </svg>
+          Clear All
+        </button>
+      </div>
+
+      <div class="email-canvas" #emailCanvas>
+        <div class="email-blocks"
+             cdkDropList
+             [cdkDropListData]="emailBlocks"
+             (cdkDropListDropped)="drop($event)">
+
+          <div class="email-block"
+               *ngFor="let block of emailBlocks; let i = index"
+               cdkDrag
+               [class.selected]="selectedBlockIndex === i"
+               (click)="selectBlock(block, i)">
+
+            <div class="block-actions">
+              <button class="action-btn" (click)="moveBlockUp(i); $event.stopPropagation()" [disabled]="i === 0">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="18 15 12 9 6 15"></polyline>
+                </svg>
+              </button>
+              <button class="action-btn" (click)="moveBlockDown(i); $event.stopPropagation()" [disabled]="i === emailBlocks.length - 1">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </button>
+              <button class="action-btn" (click)="duplicateBlock(block, i); $event.stopPropagation()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                  <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"></path>
+                </svg>
+              </button>
+              <button class="action-btn delete" (click)="deleteBlock(i); $event.stopPropagation()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+
+            <div class="block-label">
+              <span class="block-type-icon">{{ getBlockIcon(block.type) }}</span>
+              <span class="block-type-name">{{ getBlockLabel(block.type) }}</span>
+            </div>
+
+            <div class="block-preview" [innerHTML]="getSafeHtml(renderBlock(block))"></div>
+          </div>
+
+          <div class="empty-state" *ngIf="emailBlocks.length === 0">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="12" y1="8" x2="12" y2="16"></line>
+              <line x1="8" y1="12" x2="16" y2="12"></line>
+            </svg>
+            <p>Click on blocks to add them here</p>
+          </div>
+        </div>
+
+        <!-- Preview iframe -->
+        <iframe class="email-preview" style="width: 100%; height: 100%; border: none; display: none;"></iframe>
+      </div>
+    </div>
+
+    <!-- Right Panel - Properties -->
+    <div class="properties-panel" [class.collapsed]="!showPropertiesPanel" *ngIf="selectedBlock">
+      <div class="panel-header">
+        <h3>{{ getBlockLabel(selectedBlock.type) }} Properties</h3>
+        <button class="close-btn" (click)="showPropertiesPanel = false">×</button>
+      </div>
+
+      <div class="properties-tabs">
+        <button class="tab-btn" [class.active]="activePropertiesTab === 'content'" (click)="activePropertiesTab = 'content'">Content</button>
+        <button class="tab-btn" [class.active]="activePropertiesTab === 'style'" (click)="activePropertiesTab = 'style'">Style</button>
+        <button class="tab-btn" [class.active]="activePropertiesTab === 'advanced'" (click)="activePropertiesTab = 'advanced'">Advanced</button>
+      </div>
+
+      <div class="properties-content">
+        <!-- Content Tab -->
+        <div *ngIf="activePropertiesTab === 'content'">
+          <!-- Header Block Properties -->
+          <div *ngIf="selectedBlock.type === 'header'" class="property-fields">
+            <div class="form-group">
+              <label>Company Name</label>
+              <input type="text" [(ngModel)]="currentBlockProperties.companyName"
+                     (change)="updateBlockProperty('companyName', currentBlockProperties.companyName)" />
+            </div>
+            <div class="form-group">
+              <label>Tagline</label>
+              <input type="text" [(ngModel)]="currentBlockProperties.tagline"
+                     (change)="updateBlockProperty('tagline', currentBlockProperties.tagline)" />
+            </div>
+          </div>
+
+          <!-- Text Block Properties -->
+          <div *ngIf="selectedBlock.type === 'text'" class="property-fields">
+            <div class="form-group">
+              <label>Content</label>
+              <textarea [(ngModel)]="currentBlockProperties.content"
+                        (change)="updateBlockProperty('content', currentBlockProperties.content)"
+                        rows="10"></textarea>
+            </div>
+          </div>
+
+          <!-- Image Block Properties -->
+          <div *ngIf="selectedBlock.type === 'image'" class="property-fields">
+            <div class="form-group">
+              <label>Image URL</label>
+              <input type="text" [(ngModel)]="currentBlockProperties.src"
+                     (change)="updateBlockProperty('src', currentBlockProperties.src)" />
+            </div>
+            <div class="form-group">
+              <label>Alt Text</label>
+              <input type="text" [(ngModel)]="currentBlockProperties.alt"
+                     (change)="updateBlockProperty('alt', currentBlockProperties.alt)" />
+            </div>
+            <div class="form-group">
+              <label>Link URL</label>
+              <input type="text" [(ngModel)]="currentBlockProperties.link"
+                     (change)="updateBlockProperty('link', currentBlockProperties.link)" />
+            </div>
+          </div>
+
+          <!-- Button Block Properties -->
+          <div *ngIf="selectedBlock.type === 'button'" class="property-fields">
+            <div class="form-group">
+              <label>Button Text</label>
+              <input type="text" [(ngModel)]="currentBlockProperties.text"
+                     (change)="updateBlockProperty('text', currentBlockProperties.text)" />
+            </div>
+            <div class="form-group">
+              <label>URL</label>
+              <input type="text" [(ngModel)]="currentBlockProperties.url"
+                     (change)="updateBlockProperty('url', currentBlockProperties.url)" />
+            </div>
+          </div>
+
+          <!-- HTML Block Properties -->
+          <div *ngIf="selectedBlock.type === 'html'" class="property-fields">
+            <div class="form-group">
+              <label>HTML Code</label>
+              <textarea [(ngModel)]="currentBlockProperties.code"
+                        (change)="updateBlockProperty('code', currentBlockProperties.code)"
+                        rows="15"
+                        style="font-family: monospace;"></textarea>
+            </div>
+          </div>
+
+          <!-- Spacer Block Properties -->
+          <div *ngIf="selectedBlock.type === 'spacer'" class="property-fields">
+            <div class="form-group">
+              <label>Height</label>
+              <input type="text" [(ngModel)]="currentBlockProperties.height"
+                     (change)="updateBlockProperty('height', currentBlockProperties.height)"
+                     placeholder="30px" />
+            </div>
+          </div>
+
+          <!-- Columns Block Properties -->
+          <div *ngIf="selectedBlock.type === 'columns'" class="property-fields">
+            <div class="form-group">
+              <label>Number of Columns</label>
+              <select [(ngModel)]="currentBlockProperties.count"
+                      (change)="updateColumnsCount(currentBlockProperties.count)">
+                <option value="2">2 Columns</option>
+                <option value="3">3 Columns</option>
+                <option value="4">4 Columns</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Gap Between Columns</label>
+              <input type="text" [(ngModel)]="currentBlockProperties.gap"
+                     (change)="updateBlockProperty('gap', currentBlockProperties.gap)"
+                     placeholder="20px" />
+            </div>
+            <div class="columns-content" *ngFor="let column of currentBlockProperties.columns; let i = index">
+              <div class="form-group">
+                <label>Column {{i + 1}} Content</label>
+                <textarea [(ngModel)]="column.content"
+                          (change)="updateColumnContent(i, column.content)"
+                          rows="5"
+                          placeholder="Enter content for column {{i + 1}}"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- Social Block Properties -->
+          <div *ngIf="selectedBlock.type === 'social'" class="property-fields">
+            <div class="social-platforms">
+              <div class="form-group" *ngFor="let platform of currentBlockProperties.platforms; let i = index">
+                <label>{{platform.name | titlecase}} URL</label>
+                <input type="url" [(ngModel)]="platform.url"
+                       (change)="updateSocialPlatform(i, 'url', platform.url)"
+                       placeholder="https://{{platform.name}}.com/yourpage" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Icon Size</label>
+              <input type="text" [(ngModel)]="currentBlockProperties.iconSize"
+                     (change)="updateBlockProperty('iconSize', currentBlockProperties.iconSize)"
+                     placeholder="32px" />
+            </div>
+            <div class="form-group">
+              <label>Spacing</label>
+              <input type="text" [(ngModel)]="currentBlockProperties.spacing"
+                     (change)="updateBlockProperty('spacing', currentBlockProperties.spacing)"
+                     placeholder="10px" />
+            </div>
+          </div>
+
+          <!-- Video Block Properties -->
+          <div *ngIf="selectedBlock.type === 'video'" class="property-fields">
+            <div class="form-group">
+              <label>Video URL</label>
+              <input type="url" [(ngModel)]="currentBlockProperties.videoUrl"
+                     (change)="updateBlockProperty('videoUrl', currentBlockProperties.videoUrl)"
+                     placeholder="https://youtube.com/watch?v=..." />
+            </div>
+            <div class="form-group">
+              <label>Thumbnail Image URL</label>
+              <input type="url" [(ngModel)]="currentBlockProperties.thumbnail"
+                     (change)="updateBlockProperty('thumbnail', currentBlockProperties.thumbnail)"
+                     placeholder="https://example.com/thumbnail.jpg" />
+            </div>
+            <div class="form-group">
+              <label>Play Button Style</label>
+              <select [(ngModel)]="currentBlockProperties.playButtonStyle"
+                      (change)="updateBlockProperty('playButtonStyle', currentBlockProperties.playButtonStyle)">
+                <option value="circle">Circle</option>
+                <option value="square">Square</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Divider Block Properties -->
+          <div *ngIf="selectedBlock.type === 'divider'" class="property-fields">
+            <div class="form-group">
+              <label>Width</label>
+              <input type="text" [(ngModel)]="currentBlockProperties.width"
+                     (change)="updateBlockProperty('width', currentBlockProperties.width)"
+                     placeholder="100%" />
+            </div>
+            <div class="form-group">
+              <label>Thickness</label>
+              <input type="text" [(ngModel)]="currentBlockProperties.thickness"
+                     (change)="updateBlockProperty('thickness', currentBlockProperties.thickness)"
+                     placeholder="1px" />
+            </div>
+            <div class="form-group">
+              <label>Margin</label>
+              <input type="text" [(ngModel)]="currentBlockProperties.margin"
+                     (change)="updateBlockProperty('margin', currentBlockProperties.margin)"
+                     placeholder="20px 0" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Style Tab -->
+        <div *ngIf="activePropertiesTab === 'style'">
+          <div class="property-fields">
+            <!-- Common style properties -->
+            <div class="form-group" *ngIf="selectedBlock.type === 'header' || selectedBlock.type === 'button'">
+              <label>Background Color</label>
+              <div class="color-input">
+                <input type="color" [(ngModel)]="currentBlockProperties.backgroundColor"
+                       (change)="updateBlockProperty('backgroundColor', currentBlockProperties.backgroundColor)" />
+                <input type="text" [(ngModel)]="currentBlockProperties.backgroundColor"
+                       (change)="updateBlockProperty('backgroundColor', currentBlockProperties.backgroundColor)" />
+              </div>
+            </div>
+
+            <div class="form-group" *ngIf="selectedBlock.type === 'header' || selectedBlock.type === 'button'">
+              <label>Text Color</label>
+              <div class="color-input">
+                <input type="color" [(ngModel)]="currentBlockProperties.textColor"
+                       (change)="updateBlockProperty('textColor', currentBlockProperties.textColor)" />
+                <input type="text" [(ngModel)]="currentBlockProperties.textColor"
+                       (change)="updateBlockProperty('textColor', currentBlockProperties.textColor)" />
+              </div>
+            </div>
+
+            <div class="form-group" *ngIf="selectedBlock.type === 'text' || selectedBlock.type === 'button'">
+              <label>Font Size</label>
+              <input type="text" [(ngModel)]="currentBlockProperties.fontSize"
+                     (change)="updateBlockProperty('fontSize', currentBlockProperties.fontSize)" />
+            </div>
+
+            <div class="form-group" *ngIf="selectedBlock.type !== 'html' && selectedBlock.type !== 'divider'">
+              <label>Alignment</label>
+              <select [ngModel]="currentBlockProperties.alignment || currentBlockProperties.textAlign"
+                      (change)="updateBlockProperty(selectedBlock.type === 'text' ? 'textAlign' : 'alignment', $any($event.target).value)">
+                <option value="left">Left</option>
+                <option value="center">Center</option>
+                <option value="right">Right</option>
+              </select>
+            </div>
+
+            <div class="form-group" *ngIf="selectedBlock.type === 'text' || selectedBlock.type === 'image'">
+              <label>Padding</label>
+              <input type="text" [(ngModel)]="currentBlockProperties.padding"
+                     (change)="updateBlockProperty('padding', currentBlockProperties.padding)" />
+            </div>
+
+            <div class="form-group" *ngIf="selectedBlock.type === 'button'">
+              <label>Border Radius</label>
+              <input type="text" [(ngModel)]="currentBlockProperties.borderRadius"
+                     (change)="updateBlockProperty('borderRadius', currentBlockProperties.borderRadius)" />
+            </div>
+
+            <div class="form-group" *ngIf="selectedBlock.type === 'divider'">
+              <label>Color</label>
+              <div class="color-input">
+                <input type="color" [(ngModel)]="currentBlockProperties.color"
+                       (change)="updateBlockProperty('color', currentBlockProperties.color)" />
+                <input type="text" [(ngModel)]="currentBlockProperties.color"
+                       (change)="updateBlockProperty('color', currentBlockProperties.color)" />
+              </div>
+            </div>
+
+            <div class="form-group" *ngIf="selectedBlock.type === 'divider'">
+              <label>Style</label>
+              <select [(ngModel)]="currentBlockProperties.style"
+                      (change)="updateBlockProperty('style', currentBlockProperties.style)">
+                <option value="solid">Solid</option>
+                <option value="dashed">Dashed</option>
+                <option value="dotted">Dotted</option>
+              </select>
+            </div>
+
+            <div class="form-group" *ngIf="selectedBlock.type === 'video'">
+              <label>Play Button Color</label>
+              <div class="color-input">
+                <input type="color" [(ngModel)]="currentBlockProperties.playButtonColor"
+                       (change)="updateBlockProperty('playButtonColor', currentBlockProperties.playButtonColor)" />
+                <input type="text" [(ngModel)]="currentBlockProperties.playButtonColor"
+                       (change)="updateBlockProperty('playButtonColor', currentBlockProperties.playButtonColor)" />
+              </div>
+            </div>
+
+            <div class="form-group" *ngIf="selectedBlock.type === 'video'">
+              <label>Play Button Background</label>
+              <div class="color-input">
+                <input type="color" [(ngModel)]="currentBlockProperties.playButtonBackground"
+                       (change)="updateBlockProperty('playButtonBackground', currentBlockProperties.playButtonBackground)" />
+                <input type="text" [(ngModel)]="currentBlockProperties.playButtonBackground"
+                       (change)="updateBlockProperty('playButtonBackground', currentBlockProperties.playButtonBackground)" />
+              </div>
+            </div>
+
+            <div class="form-group" *ngIf="selectedBlock.type === 'columns'">
+              <label>Column Background</label>
+              <div class="color-input">
+                <input type="color" [(ngModel)]="currentBlockProperties.columnBackground"
+                       (change)="updateBlockProperty('columnBackground', currentBlockProperties.columnBackground || '#f9f9f9')" />
+                <input type="text" [(ngModel)]="currentBlockProperties.columnBackground"
+                       (change)="updateBlockProperty('columnBackground', currentBlockProperties.columnBackground || '#f9f9f9')" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Advanced Tab -->
+        <div *ngIf="activePropertiesTab === 'advanced'">
+          <div class="property-fields">
+            <p class="info-text">Advanced settings coming soon...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,90 @@
+{
+  "name": "ngx-wysiwyg-editor",
+  "version": "1.0.1",
+  "description": "A powerful and customizable WYSIWYG HTML editor for Angular applications",
+  "author": "Your Name",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/ngx-wysiwyg-editor.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/ngx-wysiwyg-editor/issues"
+  },
+  "homepage": "https://github.com/yourusername/ngx-wysiwyg-editor#readme",
+  "keywords": [
+    "angular",
+    "wysiwyg",
+    "editor",
+    "html",
+    "rich-text-editor",
+    "typescript"
+  ],
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve",
+    "build": "ng build ngx-wysiwyg-editor",
+    "watch": "ng build --watch --configuration development",
+    "test": "ng test",
+    "build:lib": "ng build ngx-wysiwyg-editor --configuration production",
+    "test:lib": "ng test ngx-wysiwyg-editor --watch=false --browsers=ChromeHeadless",
+    "publish:npm": "./scripts/publish-npm.sh",
+    "publish:npm:major": "./scripts/publish-npm.sh major",
+    "publish:npm:minor": "./scripts/publish-npm.sh minor",
+    "version:bump": "./scripts/version-bump.sh",
+    "version:major": "./scripts/version-bump.sh major",
+    "version:minor": "./scripts/version-bump.sh minor",
+    "version:patch": "./scripts/version-bump.sh patch",
+    "prepublish:npm": "npm run test:lib",
+    "update:version": "./scripts/update-version.sh",
+    "release": "./scripts/release.sh",
+    "release:publish": "./scripts/release.sh --publish",
+    "prebuild:lib": "npm run test:lib",
+    "prepublish:nuget": "npm run build:lib && npm run pack:nuget",
+    "serve:demo": "ng serve demo",
+    "build:demo": "ng build demo",
+    "deploy:demo:gh-pages": "./scripts/deploy-demo-gh-pages.sh"
+  },
+  "prettier": {
+    "printWidth": 100,
+    "singleQuote": true,
+    "overrides": [
+      {
+        "files": "*.html",
+        "options": {
+          "parser": "angular"
+        }
+      }
+    ]
+  },
+  "private": true,
+  "dependencies": {
+    "@angular/cdk": "^20.2.0",
+    "@angular/common": "^20.2.0",
+    "@angular/compiler": "^20.2.0",
+    "@angular/core": "^20.2.0",
+    "@angular/forms": "^20.2.0",
+    "@angular/platform-browser": "^20.2.0",
+    "@angular/platform-browser-dynamic": "^20.2.1",
+    "@angular/router": "^20.2.0",
+    "ngx-wysiwyg-editor": "^1.0.0",
+    "rxjs": "~7.8.0",
+    "tslib": "^2.3.0",
+    "zone.js": "^0.15.1"
+  },
+  "devDependencies": {
+    "@angular/build": "^20.2.0",
+    "@angular/cli": "^20.2.0",
+    "@angular/compiler-cli": "^20.2.0",
+    "@types/jasmine": "~5.1.0",
+    "gh-pages": "^6.3.0",
+    "jasmine-core": "~5.9.0",
+    "karma": "~6.4.0",
+    "karma-chrome-launcher": "~3.2.0",
+    "karma-coverage": "~2.2.0",
+    "karma-jasmine": "~5.1.0",
+    "karma-jasmine-html-reporter": "~2.1.0",
+    "ng-packagr": "^20.2.0",
+    "typescript": "~5.9.2"
+  }
+}

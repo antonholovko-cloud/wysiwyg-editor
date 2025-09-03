@@ -1,0 +1,44 @@
+{
+  "name": "ngx-wysiwyg-editor",
+  "displayName": "NGX WYSIWYG Editor",
+  "description": "A powerful and customizable WYSIWYG HTML editor for Angular applications",
+  "author": {
+    "name": "Your Name",
+    "email": "your.email@example.com"
+  },
+  "company": "Your Company",
+  "copyright": "Copyright © 2024",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/ngx-wysiwyg-editor.git"
+  },
+  "projectUrl": "https://github.com/yourusername/ngx-wysiwyg-editor",
+  "iconUrl": "https://raw.githubusercontent.com/yourusername/ngx-wysiwyg-editor/main/icon.png",
+  "keywords": [
+    "angular",
+    "wysiwyg",
+    "editor",
+    "html",
+    "rich-text-editor",
+    "typescript"
+  ],
+  "tags": "angular;wysiwyg;editor;html;rich-text-editor;typescript",
+  "releaseNotes": "Initial release with full WYSIWYG editing capabilities",
+  "nuget": {
+    "packageId": "NgxWysiwygEditor",
+    "targetFramework": ".NETStandard2.0",
+    "outputDirectory": "./dist/nuget",
+    "contentTargetFolder": "content\\wwwroot\\lib\\ngx-wysiwyg-editor"
+  },
+  "npm": {
+    "publishConfig": {
+      "registry": "https://registry.npmjs.org/",
+      "access": "public"
+    }
+  },
+  "build": {
+    "outputPath": "dist/ngx-wysiwyg-editor",
+    "configuration": "production"
+  }
+}
