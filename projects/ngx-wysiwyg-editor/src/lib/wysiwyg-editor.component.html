@@ -140,24 +140,63 @@
     <div class="email-canvas-container">
       <div class="canvas-header">
         <div class="device-selector">
-          <button class="device-btn active">
+          <button class="device-btn" 
+                  [class.active]="devicePreview === 'mobile'"
+                  (click)="setDevicePreview('mobile')"
+                  title="Mobile Preview (375px)">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
               <line x1="12" y1="18" x2="12" y2="18"></line>
             </svg>
+            <span class="device-label">Mobile</span>
           </button>
-          <button class="device-btn">
+          <button class="device-btn"
+                  [class.active]="devicePreview === 'tablet'"
+                  (click)="setDevicePreview('tablet')"
+                  title="Tablet Preview (768px)">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect>
               <line x1="12" y1="18" x2="12" y2="18"></line>
             </svg>
+            <span class="device-label">Tablet</span>
           </button>
-          <button class="device-btn">
+          <button class="device-btn"
+                  [class.active]="devicePreview === 'desktop'"
+                  (click)="setDevicePreview('desktop')"
+                  title="Desktop Preview (Full Width)">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
               <line x1="8" y1="21" x2="16" y2="21"></line>
               <line x1="12" y1="17" x2="12" y2="21"></line>
             </svg>
+            <span class="device-label">Desktop</span>
+          </button>
+        </div>
+        
+        <div class="device-info">
+          <span class="device-size">{{ getDeviceWidth() }}</span>
+        </div>
+        
+        <div class="view-mode-toggle">
+          <button class="view-btn" 
+                  [class.active]="viewMode === 'edit'"
+                  (click)="setViewMode('edit')"
+                  title="Edit Mode">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+              <path d="m18.5 2.5 3 3L12 15l-4 1 1-4z"></path>
+            </svg>
+            <span class="view-label">Edit</span>
+          </button>
+          <button class="view-btn" 
+                  [class.active]="viewMode === 'preview'"
+                  (click)="setViewMode('preview')"
+                  title="Preview Mode">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+            <span class="view-label">Preview</span>
           </button>
         </div>
 
@@ -170,11 +209,15 @@
         </button>
       </div>
 
-      <div class="email-canvas" #emailCanvas>
+      <div class="email-canvas" #emailCanvas [attr.data-device]="devicePreview" [attr.data-view-mode]="viewMode">
+        <!-- Edit Mode - Block Editor -->
         <div class="email-blocks"
+             *ngIf="viewMode === 'edit'"
              cdkDropList
              [cdkDropListData]="emailBlocks"
-             (cdkDropListDropped)="drop($event)">
+             (cdkDropListDropped)="drop($event)"
+             [style.max-width]="getDeviceWidth()"
+             [style.margin]="devicePreview !== 'desktop' ? '0 auto' : '0'">
 
           <div class="email-block"
                *ngFor="let block of emailBlocks; let i = index"
@@ -225,8 +268,17 @@
           </div>
         </div>
 
-        <!-- Preview iframe -->
-        <iframe class="email-preview" style="width: 100%; height: 100%; border: none; display: none;"></iframe>
+        <!-- Preview Mode - Clean Email View -->
+        <div class="email-preview-container" 
+             *ngIf="viewMode === 'preview'"
+             [style.max-width]="getDeviceWidth()"
+             [style.margin]="devicePreview !== 'desktop' ? '0 auto' : '0'">
+          <iframe class="email-preview" 
+                  [style.width]="'100%'" 
+                  [style.height]="'100%'" 
+                  [style.border]="'none'"
+                  [style.min-height]="'500px'"></iframe>
+        </div>
       </div>
     </div>
 
@@ -367,12 +419,6 @@
               <input type="text" [(ngModel)]="currentBlockProperties.iconSize"
                      (change)="updateBlockProperty('iconSize', currentBlockProperties.iconSize)"
                      placeholder="32px" />
-            </div>
-            <div class="form-group">
-              <label>Spacing</label>
-              <input type="text" [(ngModel)]="currentBlockProperties.spacing"
-                     (change)="updateBlockProperty('spacing', currentBlockProperties.spacing)"
-                     placeholder="10px" />
             </div>
           </div>
 
@@ -530,7 +576,128 @@
         <!-- Advanced Tab -->
         <div *ngIf="activePropertiesTab === 'advanced'">
           <div class="property-fields">
-            <p class="info-text">Advanced settings coming soon...</p>
+            <!-- CSS Class -->
+            <div class="form-group">
+              <label>CSS Class</label>
+              <input type="text"
+                     [(ngModel)]="currentBlockProperties.cssClass"
+                     (change)="updateBlockProperty('cssClass', currentBlockProperties.cssClass)"
+                     placeholder="custom-class" />
+              <small class="help-text">Add custom CSS class to this block</small>
+            </div>
+
+            <!-- Block ID -->
+            <div class="form-group">
+              <label>Block ID</label>
+              <input type="text"
+                     [(ngModel)]="currentBlockProperties.blockId"
+                     (change)="updateBlockProperty('blockId', currentBlockProperties.blockId)"
+                     placeholder="unique-id" />
+              <small class="help-text">Unique identifier for this block</small>
+            </div>
+
+            <!-- Custom Attributes -->
+            <div class="form-group">
+              <label>Custom Attributes</label>
+              <textarea [(ngModel)]="currentBlockProperties.customAttributes"
+                        (change)="updateBlockProperty('customAttributes', currentBlockProperties.customAttributes)"
+                        rows="3"
+                        placeholder='data-tracking="header"&#10;data-category="navigation"'></textarea>
+              <small class="help-text">Add custom HTML attributes (one per line)</small>
+            </div>
+
+            <!-- Visibility -->
+            <div class="form-group">
+              <label>Visibility</label>
+              <select [(ngModel)]="currentBlockProperties.visibility"
+                      (change)="updateBlockProperty('visibility', currentBlockProperties.visibility)">
+                <option value="visible">Visible on All Devices</option>
+                <option value="hidden">Hidden</option>
+                <option value="mobile-only">Mobile Only</option>
+                <option value="tablet-only">Tablet Only</option>
+                <option value="desktop-only">Desktop Only</option>
+              </select>
+              <small class="help-text">Control block visibility on different device previews</small>
+            </div>
+
+            <!-- Animation -->
+            <div class="form-group">
+              <label>Animation</label>
+              <select [(ngModel)]="currentBlockProperties.animation"
+                      (change)="updateBlockProperty('animation', currentBlockProperties.animation)">
+                <option value="none">None</option>
+                <option value="fade-in">Fade In</option>
+                <option value="slide-up">Slide Up</option>
+                <option value="slide-down">Slide Down</option>
+                <option value="zoom-in">Zoom In</option>
+              </select>
+              <small class="help-text">Add entrance animation to this block</small>
+            </div>
+
+            <!-- Animation Delay -->
+            <div class="form-group" *ngIf="currentBlockProperties.animation && currentBlockProperties.animation !== 'none'">
+              <label>Animation Delay (ms)</label>
+              <input type="number"
+                     [(ngModel)]="currentBlockProperties.animationDelay"
+                     (change)="updateBlockProperty('animationDelay', currentBlockProperties.animationDelay)"
+                     placeholder="0"
+                     min="0"
+                     step="100" />
+              <small class="help-text">Delay before animation starts</small>
+            </div>
+
+            <!-- Responsive Settings -->
+            <div class="form-group">
+              <label>Mobile Width</label>
+              <input type="text"
+                     [(ngModel)]="currentBlockProperties.mobileWidth"
+                     (change)="updateBlockProperty('mobileWidth', currentBlockProperties.mobileWidth)"
+                     placeholder="100%" />
+              <small class="help-text">Width on mobile devices</small>
+            </div>
+
+            <!-- Margin Settings -->
+            <div class="form-group">
+              <label>Custom Margin</label>
+              <input type="text"
+                     [(ngModel)]="currentBlockProperties.customMargin"
+                     (change)="updateBlockProperty('customMargin', currentBlockProperties.customMargin)"
+                     placeholder="10px 20px 10px 20px" />
+              <small class="help-text">Top Right Bottom Left (or use shorthand)</small>
+            </div>
+
+            <!-- Custom CSS -->
+            <div class="form-group">
+              <label>Custom CSS</label>
+              <textarea [(ngModel)]="currentBlockProperties.customCSS"
+                        (change)="updateBlockProperty('customCSS', currentBlockProperties.customCSS)"
+                        rows="5"
+                        style="font-family: monospace;"
+                        placeholder="/* Custom CSS for this block */&#10;.block-wrapper {&#10;  /* your styles */&#10;}"></textarea>
+              <small class="help-text">Add custom CSS styles for this block</small>
+            </div>
+
+            <!-- Export Settings -->
+            <div class="form-group">
+              <label class="checkbox-label">
+                <input type="checkbox"
+                       [(ngModel)]="currentBlockProperties.excludeFromExport"
+                       (change)="updateBlockProperty('excludeFromExport', currentBlockProperties.excludeFromExport)" />
+                Exclude from export
+              </label>
+              <small class="help-text">Don't include this block when exporting HTML</small>
+            </div>
+
+            <!-- Debug Mode -->
+            <div class="form-group">
+              <label class="checkbox-label">
+                <input type="checkbox"
+                       [(ngModel)]="currentBlockProperties.debugMode"
+                       (change)="updateBlockProperty('debugMode', currentBlockProperties.debugMode)" />
+                Debug mode
+              </label>
+              <small class="help-text">Show debug information for this block</small>
+            </div>
           </div>
         </div>
       </div>

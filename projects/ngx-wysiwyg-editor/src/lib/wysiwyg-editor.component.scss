@@ -272,6 +272,9 @@
           gap: 4px;
 
           .device-btn {
+            display: flex;
+            align-items: center;
+            gap: 4px;
             padding: 6px 10px;
             background: #fff;
             border: 1px solid #d0d0d0;
@@ -284,15 +287,93 @@
               width: 18px;
               height: 18px;
             }
+            
+            .device-label {
+              font-size: 12px;
+              font-weight: 500;
+              display: none;
+              
+              @media (min-width: 992px) {
+                display: block;
+              }
+            }
 
             &:hover {
               background: #f5f5f5;
             }
 
             &.active {
-              background: #e8f4ff;
+              background: #2196F3;
               border-color: #2196F3;
-              color: #2196F3;
+              color: #fff;
+            }
+          }
+        }
+        
+        .device-info {
+          display: flex;
+          align-items: center;
+          margin-left: 12px;
+          
+          .device-size {
+            font-size: 12px;
+            color: #999;
+            font-weight: 500;
+            background: #f5f5f5;
+            padding: 4px 8px;
+            border-radius: 4px;
+          }
+        }
+        
+        .view-mode-toggle {
+          display: flex;
+          margin-left: 16px;
+          border: 1px solid #d0d0d0;
+          border-radius: 6px;
+          overflow: hidden;
+          
+          .view-btn {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 6px 12px;
+            background: #fff;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 12px;
+            
+            &:first-child {
+              border-right: 1px solid #d0d0d0;
+            }
+            
+            svg {
+              display: block;
+              width: 16px;
+              height: 16px;
+            }
+            
+            .view-label {
+              font-weight: 500;
+              display: none;
+              
+              @media (min-width: 992px) {
+                display: block;
+              }
+            }
+            
+            &:hover {
+              background: #f5f5f5;
+            }
+            
+            &.active {
+              background: #2196F3;
+              color: #fff;
+              
+              &:hover {
+                background: #1976D2;
+              }
             }
           }
         }
@@ -330,10 +411,38 @@
         display: flex;
         justify-content: center;
         align-items: flex-start;
+        transition: background 0.3s ease;
+        
+        &[data-device="mobile"] {
+          background: linear-gradient(to bottom, #e0e0e0, #f5f5f5);
+          
+          .email-blocks {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            border-radius: 8px;
+            overflow: hidden;
+          }
+        }
+        
+        &[data-device="tablet"] {
+          background: linear-gradient(to bottom, #e8e8e8, #f8f8f8);
+          
+          .email-blocks {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+            border-radius: 8px;
+            overflow: hidden;
+          }
+        }
+        
+        &[data-device="desktop"] {
+          .email-blocks {
+            box-shadow: none;
+            border-radius: 0;
+          }
+        }
 
         .email-blocks {
           width: 100%;
-          max-width: 500px;
+          transition: all 0.3s ease;
           background: #fff;
           box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
           min-height: 300px;
@@ -479,6 +588,24 @@
               margin: 0;
               font-size: 14px;
             }
+          }
+        }
+        
+        // Preview Mode Container
+        .email-preview-container {
+          width: 100%;
+          transition: all 0.3s ease;
+          background: #fff;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+          min-height: 500px;
+          border-radius: 8px;
+          overflow: hidden;
+          
+          .email-preview {
+            border: none;
+            width: 100%;
+            height: 100%;
+            min-height: 500px;
           }
         }
 
@@ -663,4 +790,88 @@
       }
     }
   }
+  
+  // Advanced Tab Styles
+  .property-fields {
+    .help-text {
+      display: block;
+      color: #999;
+      font-size: 11px;
+      margin-top: 4px;
+    }
+    
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      
+      input[type="checkbox"] {
+        cursor: pointer;
+        width: auto;
+        min-width: auto;
+      }
+    }
+  }
+}
+
+// Animation Classes
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-down {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes zoom-in {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+// Visibility Classes (handled by device preview mode in JavaScript)
+.visibility-hidden {
+  display: none !important;
+}
+
+// These classes are applied dynamically based on device preview mode
+.visibility-mobile-only {
+  // Applied via JavaScript when not in mobile preview
+}
+
+.visibility-tablet-only {
+  // Applied via JavaScript when not in tablet preview
+}
+
+.visibility-desktop-only {
+  // Applied via JavaScript when not in desktop preview
 }
