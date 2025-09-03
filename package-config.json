@@ -11,10 +11,10 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/ngx-wysiwyg-editor.git"
+    "url": "https://github.com/antonholovko-cloud/wysiwyg-editor.git"
   },
-  "projectUrl": "https://github.com/yourusername/ngx-wysiwyg-editor",
-  "iconUrl": "https://raw.githubusercontent.com/yourusername/ngx-wysiwyg-editor/main/icon.png",
+  "projectUrl": "https://github.com/antonholovko-cloud/ngx-wysiwyg-editor",
+  "iconUrl": "https://raw.githubusercontent.com/antonholovko-cloud/ngx-wysiwyg-editor/main/icon.png",
   "keywords": [
     "angular",
     "wysiwyg",
