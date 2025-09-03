@@ -1,5 +1,8 @@
 # NGX WYSIWYG Editor
 
+Demo: https://antonholovko-cloud.github.io/wysiwyg-editor/
+
+
 A powerful and customizable WYSIWYG HTML editor component for Angular applications. This library provides a rich text editing experience with extensive formatting options and a clean, intuitive interface.
 
 ## Features
