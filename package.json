@@ -1,17 +1,17 @@
 {
   "name": "ngx-wysiwyg-editor",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "A powerful and customizable WYSIWYG HTML editor for Angular applications",
   "author": "Your Name",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/antonholovko-cloud/ngx-wysiwyg-editor.git"
+    "url": "https://github.com/antonholovko-cloud/-wysiwyg-editor.git"
   },
   "bugs": {
-    "url": "https://github.com/antonholovko-cloud/ngx-wysiwyg-editor/issues"
+    "url": "https://github.com/antonholovko-cloud/-wysiwyg-editor/issues"
   },
-  "homepage": "https://github.com/antonholovko-cloud/ngx-wysiwyg-editor#readme",
+  "homepage": "https://github.com/antonholovko-cloud/-wysiwyg-editor#readme",
   "keywords": [
     "angular",
     "wysiwyg",

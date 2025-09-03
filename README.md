@@ -329,7 +329,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Support
 
-For issues, questions, or suggestions, please [create an issue](https://github.com/antonholovko-cloud/ngx-wysiwyg-editor/issues) on GitHub.
+For issues, questions, or suggestions, please [create an issue](https://github.com/antonholovko-cloud/-wysiwyg-editor/issues) on GitHub.
 
 ## Acknowledgments
 
