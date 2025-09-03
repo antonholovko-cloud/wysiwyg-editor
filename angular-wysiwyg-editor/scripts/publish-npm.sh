@@ -17,6 +17,11 @@ if [ ! -f "package.json" ]; then
     exit 1
 fi
 
+# Bump version (default to patch, or use provided argument)
+BUMP_TYPE=${1:-patch}
+echo -e "${YELLOW}Bumping version ($BUMP_TYPE)...${NC}"
+./scripts/version-bump.sh $BUMP_TYPE
+
 # Build the library
 echo -e "${YELLOW}Building library...${NC}"
 npm run build:lib

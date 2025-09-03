@@ -329,6 +329,7 @@
         padding: 15px;
         display: flex;
         justify-content: center;
+        align-items: flex-start;
 
         .email-blocks {
           width: 100%;
@@ -336,8 +337,7 @@
           background: #fff;
           box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
           min-height: 300px;
-          display: flex;
-          flex-direction: column;
+          height: fit-content;
           padding-bottom: 20px;
 
           .email-block {
