@@ -7,6 +7,19 @@ Demo: https://antonholovko-cloud.github.io/wysiwyg-editor/
 
 A powerful and customizable WYSIWYG HTML editor component for Angular applications. This library provides a rich text editing experience with extensive formatting options and a clean, intuitive interface.
 
+## Angular Compatibility
+
+| Angular Version | Library Version | Status |
+|-----------------|-----------------|--------|
+| 14.x            | 1.0.7+          | ✅ Supported |
+| 15.x            | 1.0.7+          | ✅ Supported |
+| 16.x            | 1.0.7+          | ✅ Supported |
+| 17.x            | 1.0.7+          | ✅ Supported |
+| 18.x            | 1.0.7+          | ✅ Supported |
+| 19.x            | 1.0.7+          | ✅ Supported |
+| 20.x            | 1.0.7+          | ✅ Supported |
+| < 14.x          | -               | ❌ Not Supported |
+
 ## Features
 
 - **Rich Text Formatting**: Bold, italic, underline, strikethrough
@@ -51,7 +64,7 @@ dotnet add package NgxWysiwygEditor
 
 ### Import the Module
 
-#### Standalone Component (Angular 14+)
+#### Standalone Component (Angular 14.1+)
 
 ```typescript
 import { Component } from '@angular/core';
@@ -264,9 +277,10 @@ The following commands can be used in custom toolbar configurations:
 
 ### Prerequisites
 
-- Node.js (v14 or higher)
+- Node.js (v14 or higher recommended, v22+ also supported)
 - npm or yarn
-- Angular CLI
+- Angular CLI (v14 or higher)
+- Angular 14.0.0 or higher
 
 ### Build Commands
 
@@ -279,6 +293,12 @@ npm test
 
 # Build library
 npm run build
+
+# Build library (production)
+npm run build:lib
+
+# Run demo application
+npm run serve:demo
 
 # Build for NuGet
 ./scripts/build.sh          # Unix/Linux/macOS
@@ -314,6 +334,13 @@ npm publish
 - Firefox (latest)
 - Safari (latest)
 - Edge (latest)
+
+## Requirements
+
+- **Angular**: 14.0.0 or higher
+- **TypeScript**: 4.7.0 or higher
+- **RxJS**: 7.5.0 or higher
+- **Zone.js**: 0.11.4 or higher
 
 ## Contributing
 

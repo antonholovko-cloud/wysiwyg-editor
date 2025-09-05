@@ -41,6 +41,80 @@
       </div>
     </section>
 
+    <!-- Form Integration Example -->
+    <section class="demo-section">
+      <h2>Form Integration</h2>
+      <p>Use the WYSIWYG editor as a form control with validation and data binding. Perfect for content management systems and document editing.</p>
+      
+      <form [formGroup]="wysiwygForm" (ngSubmit)="onWysiwygFormSubmit()" class="wysiwyg-form">
+        <div class="form-group">
+          <label for="documentTitle">Document Title *</label>
+          <input 
+            id="documentTitle"
+            type="text" 
+            formControlName="documentTitle" 
+            class="form-control"
+            placeholder="Enter document title">
+          <div *ngIf="wysiwygForm.get('documentTitle')?.invalid && wysiwygForm.get('documentTitle')?.touched" class="error-message">
+            Title is required
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="emailTemplate">Email Template Content *</label>
+          <div class="editor-container">
+            <wysiwyg-editor
+              formControlName="emailTemplate"
+              [config]="formConfig">
+            </wysiwyg-editor>
+          </div>
+          <div *ngIf="wysiwygForm.get('emailTemplate')?.invalid && wysiwygForm.get('emailTemplate')?.touched" class="error-message">
+            <span *ngIf="wysiwygForm.get('emailTemplate')?.errors?.['required']">Content is required</span>
+            <span *ngIf="wysiwygForm.get('emailTemplate')?.errors?.['minlength']">Content must be at least 20 characters</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="category">Category</label>
+          <select id="category" formControlName="category" class="form-control">
+            <option value="">Select category</option>
+            <option value="newsletter">Newsletter</option>
+            <option value="promotion">Promotion</option>
+            <option value="announcement">Announcement</option>
+            <option value="notification">Notification</option>
+          </select>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" (click)="loadSampleData()" class="btn btn-secondary">
+            Load Sample Data
+          </button>
+          <button type="button" (click)="clearForm()" class="btn btn-outline">
+            Clear Form
+          </button>
+          <button type="submit" [disabled]="wysiwygForm.invalid" class="btn btn-primary">
+            Submit Form
+          </button>
+        </div>
+
+        <div *ngIf="formSubmitResult" class="form-result">
+          <h4>Form Submission Result:</h4>
+          <pre>{{ formSubmitResult | json }}</pre>
+        </div>
+      </form>
+
+      <div class="form-features">
+        <h4>Form Integration Features:</h4>
+        <ul>
+          <li><strong>Reactive Forms:</strong> Full support for Angular reactive forms with FormControl</li>
+          <li><strong>Validation:</strong> Built-in support for required, minLength, and custom validators</li>
+          <li><strong>Two-way Binding:</strong> Seamless data synchronization with form values</li>
+          <li><strong>Load/Save:</strong> Easy to load and save template data programmatically</li>
+          <li><strong>Form State:</strong> Tracks touched, dirty, and valid states automatically</li>
+        </ul>
+      </div>
+    </section>
+
     <!-- Compact Editor Example -->
     <section class="demo-section">
       <h2>Compact Configuration</h2>

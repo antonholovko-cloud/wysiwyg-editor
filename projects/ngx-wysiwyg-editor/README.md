@@ -47,18 +47,38 @@ A powerful, feature-rich Angular email template editor component that provides a
 
 NgxWysiwygEditor supports a wide range of Angular versions:
 
-| NgxWysiwygEditor Version | Angular Version |
-|--------------------------|-----------------|
-| 1.0.x                    | 13.0 - 20.x     |
+| NgxWysiwygEditor Version | Angular Version | Support Status |
+|--------------------------|-----------------|----------------|
+| 1.0.6+                   | 14.0 - 20.x     | ✅ Full Support |
+| 1.0.0 - 1.0.5            | 13.0 - 20.x     | ⚠️ Legacy       |
+
+### Angular Version Compatibility
+
+| Angular Version | Library Version | Status |
+|-----------------|-----------------|--------|
+| 14.x            | 1.0.6+          | ✅ Fully Supported |
+| 15.x            | 1.0.6+          | ✅ Fully Supported |
+| 16.x            | 1.0.6+          | ✅ Fully Supported |
+| 17.x            | 1.0.6+          | ✅ Fully Supported |
+| 18.x            | 1.0.6+          | ✅ Fully Supported |
+| 19.x            | 1.0.6+          | ✅ Fully Supported |
+| 20.x            | 1.0.6+          | ✅ Fully Supported |
+| < 14.x          | -               | ❌ Not Supported   |
 
 ### Required Dependencies
 
 The library requires the following Angular packages:
-- `@angular/common`: >=13.0.0 <21.0.0
-- `@angular/core`: >=13.0.0 <21.0.0
-- `@angular/cdk`: >=13.0.0 <21.0.0 (for drag-and-drop functionality)
-- `@angular/forms`: >=13.0.0 <21.0.0
-- `@angular/platform-browser`: >=13.0.0 <21.0.0
+- `@angular/common`: >=14.0.0 <21.0.0
+- `@angular/core`: >=14.0.0 <21.0.0
+- `@angular/cdk`: >=14.0.0 <21.0.0 (for drag-and-drop functionality)
+- `@angular/forms`: >=14.0.0 <21.0.0
+- `@angular/platform-browser`: >=14.0.0 <21.0.0
+
+### TypeScript and RxJS Requirements
+
+- **TypeScript**: 4.7.0 or higher
+- **RxJS**: 7.5.0 or higher
+- **Zone.js**: 0.11.4 or higher
 
 ## Installation
 
@@ -80,6 +100,39 @@ Make sure you have Angular CDK installed (required for drag-and-drop functionali
 npm install @angular/cdk
 ```
 
+## Usage
+
+### Import in Module (Angular 14+)
+
+```typescript
+import { NgModule } from '@angular/core';
+import { NgxWysiwygEditorModule } from 'ngx-wysiwyg-editor';
+
+@NgModule({
+  imports: [
+    NgxWysiwygEditorModule
+  ]
+})
+export class AppModule { }
+```
+
+### Import as Standalone Component (Angular 14.1+)
+
+```typescript
+import { Component } from '@angular/core';
+import { WysiwygEditorComponent } from 'ngx-wysiwyg-editor';
+
+@Component({
+  selector: 'app-root',
+  standalone: true,
+  imports: [WysiwygEditorComponent],
+  template: `<wysiwyg-editor [(ngModel)]="content"></wysiwyg-editor>`
+})
+export class AppComponent {
+  content = '';
+}
+```
+
 ## Code scaffolding
 
 Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
@@ -99,10 +152,24 @@ ng generate --help
 To build the library, run:
 
 ```bash
-ng build ngx-wysiwyg-editor
+npm run build:lib
+```
+
+Or using the Angular CLI directly:
+
+```bash
+npx ng-packagr -p projects/ngx-wysiwyg-editor/ng-package.json
 ```
 
 This command will compile your project, and the build artifacts will be placed in the `dist/` directory.
+
+### Development Build
+
+For development and testing:
+
+```bash
+npm run build
+```
 
 ### Publishing the Library
 
@@ -123,6 +190,12 @@ Once the project is built, you can publish your library by following these steps
 To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
 
 ```bash
+npm run test:lib
+```
+
+Or for the full test suite:
+
+```bash
 ng test
 ```
 
@@ -136,6 +209,27 @@ ng e2e
 
 Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
 
+## Demo Application
+
+To run the demo application locally:
+
+```bash
+npm run serve:demo
+```
+
+The demo will be available at `http://localhost:4200`
+
 ## Additional Resources
 
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+- [Live Demo](https://antonholovko-cloud.github.io/wysiwyg-editor/)
+- [GitHub Repository](https://github.com/antonholovko-cloud/wysiwyg-editor)
+- [NPM Package](https://www.npmjs.com/package/ngx-wysiwyg-editor)
+- [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli)
+
+## License
+
+MIT License - see the [LICENSE](../../LICENSE) file for details.
+
+## Support
+
+For issues, questions, or feature requests, please [create an issue](https://github.com/antonholovko-cloud/wysiwyg-editor/issues) on GitHub.

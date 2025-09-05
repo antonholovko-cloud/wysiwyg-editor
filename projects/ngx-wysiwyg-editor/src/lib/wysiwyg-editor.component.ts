@@ -1,4 +1,4 @@
-import { Component, ElementRef, EventEmitter, Input, Output, ViewChild, forwardRef, OnInit, AfterViewInit, ViewEncapsulation } from '@angular/core';
+import { Component, ElementRef, EventEmitter, Input, Output, ViewChild, forwardRef, OnInit, AfterViewInit, ViewEncapsulation, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
@@ -172,7 +172,10 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
   onChange: (value: string) => void = () => {};
   onTouched: () => void = () => {};
 
-  constructor(private sanitizer: DomSanitizer) {}
+  constructor(
+    private sanitizer: DomSanitizer,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void {
     this.initializeConfig();
@@ -448,19 +451,22 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
     if (!shouldRender) {
       return '';
     }
+    
+    let blockHtml = '';
 
     switch (block.type) {
       case 'header':
-        return `
+        blockHtml = `
           <div class="${wrapperClasses}" ${advancedAttributes} style="background-color: ${content.backgroundColor}; color: ${content.textColor}; text-align: ${content.alignment}; padding: 20px; min-height: ${content.height}; ${advancedStyles}">
             ${content.customCSS ? `<style>${content.customCSS}</style>` : ''}
             <h1 style="margin: 0; font-size: 28px;">${content.companyName}</h1>
             <p style="margin: 10px 0 0 0; opacity: 0.9;">${content.tagline}</p>
           </div>
         `;
+        break;
 
       case 'text':
-        return `
+        blockHtml = `
           <div class="${wrapperClasses}" ${advancedAttributes} style="padding: ${content.padding}; text-align: ${content.textAlign}; ${advancedStyles}">
             ${content.customCSS ? `<style>${content.customCSS}</style>` : ''}
             <div style="font-size: ${content.fontSize}; line-height: ${content.lineHeight};">
@@ -468,9 +474,10 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
             </div>
           </div>
         `;
+        break;
 
       case 'image':
-        return `
+        blockHtml = `
           <div class="${wrapperClasses}" ${advancedAttributes} style="text-align: ${content.alignment}; padding: ${content.padding}; ${advancedStyles}">
             ${content.customCSS ? `<style>${content.customCSS}</style>` : ''}
             ${content.link ? `<a href="${content.link}">` : ''}
@@ -478,9 +485,10 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
             ${content.link ? '</a>' : ''}
           </div>
         `;
+        break;
 
       case 'button':
-        return `
+        blockHtml = `
           <div class="${wrapperClasses}" ${advancedAttributes} style="text-align: ${content.alignment}; padding: 20px; ${advancedStyles}">
             ${content.customCSS ? `<style>${content.customCSS}</style>` : ''}
             <a href="${content.url}" style="display: inline-block; background-color: ${content.backgroundColor}; color: ${content.textColor}; padding: ${content.padding}; text-decoration: none; border-radius: ${content.borderRadius}; font-size: ${content.fontSize};">
@@ -488,14 +496,16 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
             </a>
           </div>
         `;
+        break;
 
       case 'divider':
-        return `
+        blockHtml = `
           <div class="${wrapperClasses}" ${advancedAttributes} style="padding: 0; margin: ${content.margin}; ${advancedStyles}">
             ${content.customCSS ? `<style>${content.customCSS}</style>` : ''}
             <hr style="border: none; border-top: ${content.thickness} ${content.style} ${content.color}; width: ${content.width}; margin: 0 auto;">
           </div>
         `;
+        break;
 
       case 'columns':
         const columnWidth = `${100 / content.count}%`;
@@ -508,7 +518,7 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
             </div>
           </div>`
         ).join('');
-        return `
+        blockHtml = `
           <div class="${wrapperClasses}" ${advancedAttributes} style="padding: 20px; ${advancedStyles}">
             ${content.customCSS ? `<style>${content.customCSS}</style>` : ''}
             <div style="width: 100%; font-size: 0;">
@@ -516,16 +526,18 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
             </div>
           </div>
         `;
+        break;
 
       case 'spacer':
-        return `
+        blockHtml = `
           <div class="${wrapperClasses}" ${advancedAttributes} style="height: ${content.height}; ${advancedStyles}">
             ${content.customCSS ? `<style>${content.customCSS}</style>` : ''}
           </div>
         `;
+        break;
 
       case 'video':
-        return `
+        blockHtml = `
           <div class="${wrapperClasses}" ${advancedAttributes} style="text-align: center; padding: 20px; ${advancedStyles}">
             ${content.customCSS ? `<style>${content.customCSS}</style>` : ''}
             <div style="position: relative; display: inline-block;">
@@ -536,6 +548,7 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
             </div>
           </div>
         `;
+        break;
 
       case 'social':
         const icons = content.platforms.map((platform: any) =>
@@ -543,24 +556,29 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
             <span style="font-size: ${content.iconSize};">${platform.icon}</span>
           </a>`
         ).join('');
-        return `
+        blockHtml = `
           <div class="${wrapperClasses}" ${advancedAttributes} style="text-align: ${content.alignment}; padding: 20px; ${advancedStyles}">
             ${content.customCSS ? `<style>${content.customCSS}</style>` : ''}
             ${icons}
           </div>
         `;
+        break;
 
       case 'html':
-        return `
+        blockHtml = `
           <div class="${wrapperClasses}" ${advancedAttributes} style="${advancedStyles}">
             ${content.customCSS ? `<style>${content.customCSS}</style>` : ''}
-            ${content.code}
+            ${content.code || content.html || ''}
           </div>
         `;
+        break;
 
       default:
         return '';
     }
+    
+    // Wrap with block markers for parsing
+    return `<!-- block:${block.type}:start -->${blockHtml}<!-- block:${block.type}:end -->`;
   }
 
   // UI Actions
@@ -672,7 +690,106 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
 
   // ControlValueAccessor methods
   writeValue(value: string): void {
+    if (value === this.content && this.emailBlocks.length > 0) {
+      // No change needed if same value and blocks exist
+      return;
+    }
+    
     this.content = value || '';
+    
+    // If we receive HTML content, try to parse it into blocks
+    if (value && value.trim()) {
+      this.parseHtmlToBlocks(value);
+    } else {
+      // Clear blocks if no value
+      this.emailBlocks = [];
+      this.selectedBlock = null;
+      this.selectedBlockIndex = -1;
+    }
+    
+    // Trigger change detection and update the preview
+    this.cdr.detectChanges();
+    
+    // Update the preview after change detection
+    setTimeout(() => {
+      this.renderEmail();
+      this.cdr.detectChanges();
+    }, 0);
+  }
+  
+  private parseHtmlToBlocks(html: string): void {
+    // Try to extract blocks from the HTML content
+    // This is a simplified parser - in production, you'd want a more robust solution
+    this.emailBlocks = [];
+    
+    // Check if it's our generated HTML with block markers
+    const blockMatches = html.match(/<!-- block:(\w+):start -->([\s\S]*?)<!-- block:\w+:end -->/g);
+    
+    if (blockMatches && blockMatches.length > 0) {
+      // Parse our marked blocks
+      blockMatches.forEach(match => {
+        const typeMatch = match.match(/<!-- block:(\w+):start -->/);
+        const contentMatch = match.match(/<!-- block:\w+:start -->([\s\S]*?)<!-- block:\w+:end -->/);
+        
+        if (typeMatch && contentMatch) {
+          const type = typeMatch[1];
+          const blockHtml = contentMatch[1];
+          const block = this.parseBlockFromHtml(type, blockHtml);
+          if (block) {
+            this.emailBlocks.push(block);
+          }
+        }
+      });
+    } else {
+      // Fallback: Create a single HTML block with the entire content
+      // Use 'code' property as that's what the template expects
+      const htmlBlock: EmailBlock = {
+        id: this.generateId(),
+        type: 'html',
+        content: { 
+          ...this.blockTemplates['html'], 
+          code: html  // Use 'code' property, not 'html'
+        },
+        settings: {}
+      };
+      this.emailBlocks.push(htmlBlock);
+    }
+  }
+  
+  private parseBlockFromHtml(type: string, html: string): EmailBlock | null {
+    const block: EmailBlock = {
+      id: this.generateId(),
+      type: type as any,
+      content: { ...this.blockTemplates[type] },
+      settings: {}
+    };
+    
+    // Parse content based on block type
+    switch (type) {
+      case 'text':
+        // For text blocks, use 'content' property
+        block.content.content = html.trim();
+        break;
+      case 'html':
+        // For HTML blocks, use 'code' property
+        block.content.code = html;
+        break;
+      case 'header':
+        // Extract company name and tagline from header HTML
+        const h1Match = html.match(/<h1[^>]*>(.*?)<\/h1>/);
+        const pMatch = html.match(/<p[^>]*>(.*?)<\/p>/);
+        if (h1Match) block.content.companyName = h1Match[1];
+        if (pMatch) block.content.tagline = pMatch[1];
+        break;
+      // Add more block type parsers as needed
+      default:
+        // For unknown types, try to use as HTML block
+        block.type = 'html';
+        block.content = { ...this.blockTemplates['html'], code: html };
+        break;
+    }
+    
+    return block;
   }
 
   registerOnChange(fn: (value: string) => void): void {

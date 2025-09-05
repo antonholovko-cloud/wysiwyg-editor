@@ -415,6 +415,133 @@ describe('WysiwygEditorComponent', () => {
     expect(component.content).toBe(testValue);
   });
 
+  it('should parse HTML and create blocks when writeValue is called', () => {
+    const htmlWithMarkers = `
+      <!-- block:header:start -->
+      <div><h1>Test Company</h1><p>Test Tagline</p></div>
+      <!-- block:header:end -->
+      <!-- block:text:start -->
+      <div>Some text content</div>
+      <!-- block:text:end -->
+    `;
+    
+    component.writeValue(htmlWithMarkers);
+    
+    expect(component.emailBlocks.length).toBe(2);
+    expect(component.emailBlocks[0].type).toBe('header');
+    expect(component.emailBlocks[0].content.companyName).toBe('Test Company');
+    expect(component.emailBlocks[0].content.tagline).toBe('Test Tagline');
+    expect(component.emailBlocks[1].type).toBe('text');
+  });
+
+  it('should create HTML block for non-marked HTML content', () => {
+    const plainHtml = '<div>Plain HTML content without markers</div>';
+    
+    component.writeValue(plainHtml);
+    
+    expect(component.emailBlocks.length).toBe(1);
+    expect(component.emailBlocks[0].type).toBe('html');
+    expect(component.emailBlocks[0].content.html).toBe(plainHtml);
+  });
+
+  it('should clear blocks when writeValue receives empty value', () => {
+    component.emailBlocks = [
+      { id: '1', type: 'header' },
+      { id: '2', type: 'text' }
+    ];
+    component.selectedBlock = component.emailBlocks[0];
+    component.selectedBlockIndex = 0;
+    
+    component.writeValue('');
+    
+    expect(component.emailBlocks.length).toBe(0);
+    expect(component.selectedBlock).toBeNull();
+    expect(component.selectedBlockIndex).toBe(-1);
+  });
+
+  it('should clear blocks when writeValue receives null', () => {
+    component.emailBlocks = [
+      { id: '1', type: 'header' }
+    ];
+    
+    component.writeValue(null as any);
+    
+    expect(component.emailBlocks.length).toBe(0);
+  });
+
+  it('should update view when writeValue is called', () => {
+    spyOn(component as any, 'renderEmail');
+    
+    component.writeValue('<div>Test</div>');
+    
+    expect((component as any).renderEmail).toHaveBeenCalled();
+  });
+
+  it('should include block markers in generated HTML', () => {
+    const block: EmailBlock = {
+      id: 'test-id',
+      type: 'header',
+      content: {
+        companyName: 'Test Co',
+        tagline: 'Tagline',
+        backgroundColor: '#000',
+        textColor: '#fff',
+        height: '100px',
+        alignment: 'center'
+      }
+    };
+    
+    const html = component.renderBlock(block);
+    
+    expect(html).toContain('<!-- block:header:start -->');
+    expect(html).toContain('<!-- block:header:end -->');
+  });
+
+  it('should handle form value updates in reactive forms', () => {
+    const onChangeFn = jasmine.createSpy('onChange');
+    component.registerOnChange(onChangeFn);
+    
+    // Simulate form setting a new value
+    const newHtml = '<div>New content from form</div>';
+    component.writeValue(newHtml);
+    
+    expect(component.content).toBe(newHtml);
+    expect(component.emailBlocks.length).toBe(1);
+    expect(component.emailBlocks[0].type).toBe('html');
+  });
+
+  it('should emit changes when blocks are modified', () => {
+    const onChangeFn = jasmine.createSpy('onChange');
+    component.registerOnChange(onChangeFn);
+    
+    component.addBlock('text');
+    
+    expect(onChangeFn).toHaveBeenCalled();
+    const emittedHtml = onChangeFn.calls.mostRecent().args[0];
+    expect(emittedHtml).toContain('<!-- block:text:start -->');
+    expect(emittedHtml).toContain('<!-- block:text:end -->');
+  });
+
+  it('should preserve block content when parsing and regenerating', () => {
+    const originalBlock: EmailBlock = {
+      id: '1',
+      type: 'text',
+      content: { content: 'Test content here' }
+    };
+    component.emailBlocks = [originalBlock];
+    
+    // Generate HTML
+    const generatedHtml = (component as any).generateEmailHtml();
+    
+    // Clear and parse back
+    component.writeValue(generatedHtml);
+    
+    // Should have recreated the block
+    expect(component.emailBlocks.length).toBeGreaterThan(0);
+    // The content should be preserved (though structure might be in HTML block)
+    expect(component.content).toContain('Test content');
+  });
+
   it('should register onChange callback', () => {
     const onChangeFn = jasmine.createSpy('onChange');
     

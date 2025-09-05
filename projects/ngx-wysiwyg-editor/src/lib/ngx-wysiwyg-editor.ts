@@ -8,7 +8,7 @@ import { Component } from '@angular/core';
       ngx-wysiwyg-editor works!
     </p>
   `,
-  styles: ``
+  styles: []
 })
 export class NgxWysiwygEditor {
 
