@@ -27,9 +27,17 @@ fi
 # Extract repository name for base href
 REPO_NAME=$(basename -s .git "$REPO_URL")
 
+# Extract GitHub username from URL
+if [[ "$REPO_URL" =~ github\.com[:/]([^/]+)/ ]]; then
+    GITHUB_USER="${BASH_REMATCH[1]}"
+else
+    echo -e "${RED}Error: Could not extract GitHub username from URL: $REPO_URL${NC}"
+    exit 1
+fi
+
 echo -e "${YELLOW}Building demo for production...${NC}"
 # Build with base href for GitHub Pages
-ng build demo --base-href "/wysiwyg-editor/"
+ng build demo --base-href "/$REPO_NAME/"
 
 echo -e "${YELLOW}Installing gh-pages if needed...${NC}"
 if ! npm list --depth=0 gh-pages > /dev/null 2>&1; then
@@ -40,8 +48,8 @@ echo -e "${YELLOW}Cleaning up gh-pages cache...${NC}"
 rm -rf node_modules/.cache/gh-pages 2>/dev/null || true
 
 echo -e "${YELLOW}Deploying to GitHub Pages...${NC}"
-npx gh-pages -d dist/demo/browser -f
+npx gh-pages -d dist/demo -f
 
 echo -e "${GREEN}✓ Demo deployed successfully!${NC}"
-echo -e "${GREEN}View your demo at: https://antonholovko-cloud.github.io/wysiwyg-editor/${NC}"
+echo -e "${GREEN}View your demo at: https://$GITHUB_USER.github.io/$REPO_NAME/${NC}"
 echo -e "${YELLOW}Note: It may take a few minutes for the changes to appear.${NC}"
