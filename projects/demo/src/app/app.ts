@@ -9,17 +9,17 @@ import { EditorConfig } from 'ngx-wysiwyg-editor';
 })
 export class AppComponent {
   title = 'Email Template Editor Demo';
-  
+
   // Email template content
   emailContent = '';
-  
+
   // Form example
   form: FormGroup;
-  
+
   // WYSIWYG Form with editor control
   wysiwygForm: FormGroup;
   formSubmitResult: any = null;
-  
+
   // Configuration examples
   defaultConfig: EditorConfig = {
     theme: 'light',
@@ -30,7 +30,7 @@ export class AppComponent {
     fontFamily: 'Arial, sans-serif',
     height: '600px'
   };
-  
+
   compactConfig: EditorConfig = {
     theme: 'light',
     showBlockPanel: true,
@@ -38,7 +38,7 @@ export class AppComponent {
     emailWidth: '500px',
     height: '400px'
   };
-  
+
   formConfig: EditorConfig = {
     theme: 'light',
     showBlockPanel: true,
@@ -48,20 +48,20 @@ export class AppComponent {
     fontFamily: 'Arial, sans-serif',
     height: '450px'
   };
-  
+
   // Current selected block
   selectedBlock: any = null;
-  
+
   // HTML output display
   showHtmlOutput = false;
-  
+
   constructor(private fb: FormBuilder) {
     this.form = this.fb.group({
       title: ['Sample Document', Validators.required],
       content: ['<h2>Document Content</h2><p>Enter your document content here...</p>', [Validators.required, Validators.minLength(10)]],
       description: ['This is a sample description.']
     });
-    
+
     // Initialize WYSIWYG form with proper form control
     this.wysiwygForm = this.fb.group({
       documentTitle: ['', [Validators.required]],
@@ -69,26 +69,27 @@ export class AppComponent {
       category: ['']
     });
   }
-  
+
   onContentChange(content: string): void {
     this.emailContent = content;
     console.log('Email template content changed:', content);
   }
-  
+
   onBlockSelected(block: any): void {
     this.selectedBlock = block;
     console.log('Block selected:', block);
   }
-  
+
   onEditorFocus(): void {
     console.log('Editor focused');
   }
-  
+
   onEditorBlur(): void {
     console.log('Editor blurred');
   }
-  
+
   onFormSubmit(): void {
+    debugger
     if (this.form.valid) {
       console.log('Form submitted:', this.form.value);
       alert('Form submitted successfully! Check console for details.');
@@ -96,11 +97,11 @@ export class AppComponent {
       alert('Please fill in all required fields correctly.');
     }
   }
-  
+
   toggleHtmlOutput(): void {
     this.showHtmlOutput = !this.showHtmlOutput;
   }
-  
+
   downloadTemplate(): void {
     if (this.emailContent) {
       const blob = new Blob([this.emailContent], { type: 'text/html' });
@@ -112,7 +113,7 @@ export class AppComponent {
       window.URL.revokeObjectURL(url);
     }
   }
-  
+
   copyHtml(): void {
     if (this.emailContent) {
       navigator.clipboard.writeText(this.emailContent).then(() => {
@@ -120,7 +121,7 @@ export class AppComponent {
       });
     }
   }
-  
+
   // Form Integration Methods
   onWysiwygFormSubmit(): void {
     if (this.wysiwygForm.valid) {
@@ -138,7 +139,7 @@ export class AppComponent {
       alert('Please fill in all required fields correctly.');
     }
   }
-  
+
   loadSampleData(): void {
     // Sample email template HTML content
     const sampleEmailHtml = `
@@ -169,20 +170,20 @@ export class AppComponent {
         </p>
       </div>
     `;
-    
+
     // Set form values including the WYSIWYG editor content
     this.wysiwygForm.patchValue({
       documentTitle: 'Monthly Newsletter - Spring Edition',
       emailTemplate: sampleEmailHtml,
       category: 'newsletter'
     });
-    
+
     // Clear previous result
     this.formSubmitResult = null;
-    
+
     console.log('Sample data loaded into form');
   }
-  
+
   clearForm(): void {
     this.wysiwygForm.reset({
       documentTitle: '',

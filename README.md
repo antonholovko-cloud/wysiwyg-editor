@@ -48,17 +48,6 @@ A powerful and customizable WYSIWYG HTML editor component for Angular applicatio
 npm install ngx-wysiwyg-editor
 ```
 
-### NuGet Installation
-
-```bash
-Install-Package NgxWysiwygEditor
-```
-
-Or using .NET CLI:
-
-```bash
-dotnet add package NgxWysiwygEditor
-```
 
 ## Setup
 
