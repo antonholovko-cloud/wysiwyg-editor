@@ -80,11 +80,33 @@
     }
   }
 
+  // Mobile backdrop overlay
+  .mobile-backdrop {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 998;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    
+    @media (max-width: 768px) {
+      &.active {
+        display: block;
+        opacity: 1;
+      }
+    }
+  }
+
   // Main Editor Area
   .editor-main {
     display: flex;
     flex: 1;
     overflow: hidden;
+    position: relative;
 
     // Left Panel - Blocks
     .blocks-panel {
@@ -95,9 +117,58 @@
       flex-direction: column;
       transition: width 0.3s;
 
+      // Mobile slide-in drawer
+      @media (max-width: 768px) {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        height: 70vh;
+        max-height: 500px;
+        border-right: none;
+        border-top: 1px solid #e0e0e0;
+        border-radius: 16px 16px 0 0;
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+        z-index: 999;
+        transform: translateY(100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        
+        &:not(.collapsed) {
+          transform: translateY(0);
+        }
+      }
+
       &.collapsed {
         width: 0;
         overflow: hidden;
+        
+        @media (max-width: 768px) {
+          width: 100%;
+          transform: translateY(100%);
+        }
+      }
+
+      // Mobile drawer handle
+      .drawer-handle {
+        display: none;
+        
+        @media (max-width: 768px) {
+          display: flex;
+          justify-content: center;
+          padding: 12px;
+          background: #fff;
+          border-bottom: 1px solid #e0e0e0;
+          cursor: grab;
+          
+          &::before {
+            content: '';
+            width: 40px;
+            height: 5px;
+            background: #d0d0d0;
+            border-radius: 3px;
+          }
+        }
       }
 
       .panel-tabs {
@@ -133,6 +204,12 @@
         flex: 1;
         overflow-y: auto;
         padding: 12px;
+        
+        @media (max-width: 768px) {
+          // Ensure proper scrolling on mobile
+          height: calc(100% - 100px); // Account for handle and tabs
+          -webkit-overflow-scrolling: touch;
+        }
 
         .blocks-grid {
           display: grid;

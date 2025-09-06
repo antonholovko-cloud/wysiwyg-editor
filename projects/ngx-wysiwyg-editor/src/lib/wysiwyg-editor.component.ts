@@ -1,4 +1,4 @@
-import { Component, ElementRef, EventEmitter, Input, Output, ViewChild, forwardRef, OnInit, AfterViewInit, ViewEncapsulation, ChangeDetectorRef } from '@angular/core';
+import { Component, ElementRef, EventEmitter, Input, Output, ViewChild, forwardRef, OnInit, AfterViewInit, OnDestroy, ViewEncapsulation, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
@@ -38,7 +38,7 @@ export interface EditorConfig {
   ],
   encapsulation: ViewEncapsulation.None
 })
-export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, AfterViewInit {
+export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, AfterViewInit, OnDestroy {
   @ViewChild('emailCanvas', { static: false }) emailCanvas!: ElementRef<HTMLDivElement>;
 
   @Input() config: EditorConfig = {};
@@ -61,6 +61,8 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
   isDragging = false;
   devicePreview: 'mobile' | 'tablet' | 'desktop' = 'desktop';
   viewMode: 'edit' | 'preview' = 'edit';
+  isMobile = false;
+  private resizeListener: any;
 
   // Email settings
   emailSettings = {
@@ -180,6 +182,20 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
   ngOnInit(): void {
     this.initializeConfig();
     this.loadDefaultTemplate();
+    this.checkMobileView();
+    
+    // Listen for window resize
+    this.resizeListener = () => {
+      this.checkMobileView();
+    };
+    window.addEventListener('resize', this.resizeListener);
+  }
+
+  ngOnDestroy(): void {
+    // Clean up resize listener
+    if (this.resizeListener) {
+      window.removeEventListener('resize', this.resizeListener);
+    }
   }
 
   ngAfterViewInit(): void {
@@ -188,6 +204,16 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
     setTimeout(() => {
       this.updatePreviewSize();
     }, 100);
+  }
+
+  private checkMobileView(): void {
+    const wasMobile = this.isMobile;
+    this.isMobile = window.innerWidth <= 768;
+    
+    // On mobile, close panel by default when switching from desktop
+    if (this.isMobile && !wasMobile) {
+      this.showBlockPanel = false;
+    }
   }
 
   private initializeConfig(): void {
@@ -584,10 +610,26 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
   // UI Actions
   toggleBlockPanel(): void {
     this.showBlockPanel = !this.showBlockPanel;
+    
+    // On mobile, open with blocks tab by default
+    if (this.isMobile && this.showBlockPanel) {
+      this.activeTab = 'blocks';
+    }
   }
 
   togglePropertiesPanel(): void {
     this.showPropertiesPanel = !this.showPropertiesPanel;
+  }
+
+  showSettingsTab(): void {
+    this.activeTab = 'settings';
+    this.showBlockPanel = true;
+  }
+
+  closeMobilePanel(): void {
+    if (this.isMobile) {
+      this.showBlockPanel = false;
+    }
   }
 
   // Device preview methods

@@ -14,7 +14,7 @@
         </svg>
         Blocks
       </button>
-      <button class="toolbar-btn" (click)="activeTab = 'settings'">
+      <button class="toolbar-btn" (click)="showSettingsTab()">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="3"></circle>
           <path d="M12 1v6m0 6v6m4.22-13.22l4.24 4.24M1.54 19.54l4.24-4.24M22.46 19.54l-4.24-4.24M1.54 4.46l4.24 4.24"></path>
@@ -55,9 +55,14 @@
     </div>
   </div>
 
+  <!-- Mobile backdrop -->
+  <div class="mobile-backdrop" [class.active]="showBlockPanel && isMobile" (click)="closeMobilePanel()"></div>
+
   <div class="editor-main">
     <!-- Left Panel - Blocks -->
     <div class="blocks-panel" [class.collapsed]="!showBlockPanel">
+      <!-- Mobile drawer handle -->
+      <div class="drawer-handle" (click)="closeMobilePanel()"></div>
       <div class="panel-tabs">
         <button class="tab-btn" [class.active]="activeTab === 'blocks'" (click)="activeTab = 'blocks'">
           Blocks
