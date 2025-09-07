@@ -5,7 +5,7 @@
   <!-- Top Toolbar -->
   <div class="editor-toolbar">
     <div class="toolbar-left">
-      <button class="toolbar-btn" (click)="toggleBlockPanel()" [class.active]="showBlockPanel">
+      <button type="button" class="toolbar-btn" (click)="toggleBlockPanel()" [class.active]="showBlockPanel">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <rect x="3" y="3" width="7" height="7"></rect>
           <rect x="14" y="3" width="7" height="7"></rect>
@@ -14,7 +14,7 @@
         </svg>
         Blocks
       </button>
-      <button class="toolbar-btn" (click)="showSettingsTab()">
+      <button type="button" class="toolbar-btn" (click)="showSettingsTab()">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="3"></circle>
           <path d="M12 1v6m0 6v6m4.22-13.22l4.24 4.24M1.54 19.54l4.24-4.24M22.46 19.54l-4.24-4.24M1.54 4.46l4.24 4.24"></path>
@@ -28,7 +28,7 @@
     </div>
 
     <div class="toolbar-right">
-      <button class="toolbar-btn" (click)="saveTemplate()">
+      <button type="button" class="toolbar-btn" (click)="saveTemplate()">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"></path>
           <polyline points="17 21 17 13 7 13 7 21"></polyline>
@@ -36,7 +36,7 @@
         </svg>
         Save
       </button>
-      <button class="toolbar-btn" (click)="loadTemplate()">
+      <button type="button" class="toolbar-btn" (click)="loadTemplate()">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"></path>
           <polyline points="7 10 12 15 17 10"></polyline>
@@ -44,7 +44,7 @@
         </svg>
         Load
       </button>
-      <button class="toolbar-btn primary" (click)="exportHtml()">
+      <button type="button" class="toolbar-btn primary" (click)="exportHtml()">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"></path>
           <polyline points="17 8 12 3 7 8"></polyline>
@@ -64,10 +64,10 @@
       <!-- Mobile drawer handle -->
       <div class="drawer-handle" (click)="closeMobilePanel()"></div>
       <div class="panel-tabs">
-        <button class="tab-btn" [class.active]="activeTab === 'blocks'" (click)="activeTab = 'blocks'">
+        <button type="button" class="tab-btn" [class.active]="activeTab === 'blocks'" (click)="activeTab = 'blocks'">
           Blocks
         </button>
-        <button class="tab-btn" [class.active]="activeTab === 'settings'" (click)="activeTab = 'settings'">
+        <button type="button" class="tab-btn" [class.active]="activeTab === 'settings'" (click)="activeTab = 'settings'">
           Settings
         </button>
       </div>
@@ -145,7 +145,7 @@
     <div class="email-canvas-container">
       <div class="canvas-header">
         <div class="device-selector">
-          <button class="device-btn" 
+          <button type="button" class="device-btn"
                   [class.active]="devicePreview === 'mobile'"
                   (click)="setDevicePreview('mobile')"
                   title="Mobile Preview (375px)">
@@ -155,7 +155,7 @@
             </svg>
             <span class="device-label">Mobile</span>
           </button>
-          <button class="device-btn"
+          <button type="button" class="device-btn"
                   [class.active]="devicePreview === 'tablet'"
                   (click)="setDevicePreview('tablet')"
                   title="Tablet Preview (768px)">
@@ -165,7 +165,7 @@
             </svg>
             <span class="device-label">Tablet</span>
           </button>
-          <button class="device-btn"
+          <button type="button" class="device-btn"
                   [class.active]="devicePreview === 'desktop'"
                   (click)="setDevicePreview('desktop')"
                   title="Desktop Preview (Full Width)">
@@ -177,13 +177,13 @@
             <span class="device-label">Desktop</span>
           </button>
         </div>
-        
+
         <div class="device-info">
           <span class="device-size">{{ getDeviceWidth() }}</span>
         </div>
-        
+
         <div class="view-mode-toggle">
-          <button class="view-btn" 
+          <button type="button" class="view-btn"
                   [class.active]="viewMode === 'edit'"
                   (click)="setViewMode('edit')"
                   title="Edit Mode">
@@ -193,7 +193,7 @@
             </svg>
             <span class="view-label">Edit</span>
           </button>
-          <button class="view-btn" 
+          <button type="button" class="view-btn"
                   [class.active]="viewMode === 'preview'"
                   (click)="setViewMode('preview')"
                   title="Preview Mode">
@@ -205,7 +205,7 @@
           </button>
         </div>
 
-        <button class="clear-btn" (click)="clearAll()">
+        <button type="button" class="clear-btn" (click)="clearAll()">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polyline points="3 6 5 6 21 6"></polyline>
             <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"></path>
@@ -231,23 +231,23 @@
                (click)="selectBlock(block, i)">
 
             <div class="block-actions">
-              <button class="action-btn" (click)="moveBlockUp(i); $event.stopPropagation()" [disabled]="i === 0">
+              <button type="button" class="action-btn" (click)="moveBlockUp(i); $event.stopPropagation()" [disabled]="i === 0">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <polyline points="18 15 12 9 6 15"></polyline>
                 </svg>
               </button>
-              <button class="action-btn" (click)="moveBlockDown(i); $event.stopPropagation()" [disabled]="i === emailBlocks.length - 1">
+              <button type="button" class="action-btn" (click)="moveBlockDown(i); $event.stopPropagation()" [disabled]="i === emailBlocks.length - 1">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <polyline points="6 9 12 15 18 9"></polyline>
                 </svg>
               </button>
-              <button class="action-btn" (click)="duplicateBlock(block, i); $event.stopPropagation()">
+              <button type="button" class="action-btn" (click)="duplicateBlock(block, i); $event.stopPropagation()">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                   <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"></path>
                 </svg>
               </button>
-              <button class="action-btn delete" (click)="deleteBlock(i); $event.stopPropagation()">
+              <button type="button" class="action-btn delete" (click)="deleteBlock(i); $event.stopPropagation()">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <line x1="18" y1="6" x2="6" y2="18"></line>
                   <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -274,13 +274,13 @@
         </div>
 
         <!-- Preview Mode - Clean Email View -->
-        <div class="email-preview-container" 
+        <div class="email-preview-container"
              *ngIf="viewMode === 'preview'"
              [style.max-width]="getDeviceWidth()"
              [style.margin]="devicePreview !== 'desktop' ? '0 auto' : '0'">
-          <iframe class="email-preview" 
-                  [style.width]="'100%'" 
-                  [style.height]="'100%'" 
+          <iframe class="email-preview"
+                  [style.width]="'100%'"
+                  [style.height]="'100%'"
                   [style.border]="'none'"
                   [style.min-height]="'500px'"></iframe>
         </div>
@@ -291,13 +291,13 @@
     <div class="properties-panel" [class.collapsed]="!showPropertiesPanel" *ngIf="selectedBlock">
       <div class="panel-header">
         <h3>{{ getBlockLabel(selectedBlock.type) }} Properties</h3>
-        <button class="close-btn" (click)="showPropertiesPanel = false">×</button>
+        <button type="button" class="close-btn" (click)="showPropertiesPanel = false">×</button>
       </div>
 
       <div class="properties-tabs">
-        <button class="tab-btn" [class.active]="activePropertiesTab === 'content'" (click)="activePropertiesTab = 'content'">Content</button>
-        <button class="tab-btn" [class.active]="activePropertiesTab === 'style'" (click)="activePropertiesTab = 'style'">Style</button>
-        <button class="tab-btn" [class.active]="activePropertiesTab === 'advanced'" (click)="activePropertiesTab = 'advanced'">Advanced</button>
+        <button type="button" class="tab-btn" [class.active]="activePropertiesTab === 'content'" (click)="activePropertiesTab = 'content'">Content</button>
+        <button type="button" class="tab-btn" [class.active]="activePropertiesTab === 'style'" (click)="activePropertiesTab = 'style'">Style</button>
+        <button type="button" class="tab-btn" [class.active]="activePropertiesTab === 'advanced'" (click)="activePropertiesTab = 'advanced'">Advanced</button>
       </div>
 
       <div class="properties-content">
