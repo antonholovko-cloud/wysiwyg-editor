@@ -402,64 +402,92 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
   private generateEmailHtml(): string {
     const blocks = this.emailBlocks.map(block => this.renderBlock(block)).join('');
     const isPreview = this.viewMode === 'preview';
+    const emailWidth = parseInt(this.emailSettings.width) || 600;
 
     return `
-      <!DOCTYPE html>
-      <html>
+      <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+      <html xmlns="http://www.w3.org/1999/xhtml">
       <head>
-        <meta charset="utf-8">
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <style>
+        <title>Email Template</title>
+        <!--[if gte mso 9]>
+        <xml>
+          <o:OfficeDocumentSettings>
+            <o:AllowPNG/>
+            <o:PixelsPerInch>96</o:PixelsPerInch>
+          </o:OfficeDocumentSettings>
+        </xml>
+        <![endif]-->
+        <style type="text/css">
+          /* Reset styles for better email client compatibility */
+          body, table, td, p, a, li, blockquote {
+            -webkit-text-size-adjust: 100%; 
+            -ms-text-size-adjust: 100%;
+          }
+          table, td {
+            mso-table-lspace: 0pt;
+            mso-table-rspace: 0pt;
+          }
+          img {
+            -ms-interpolation-mode: bicubic;
+            border: 0;
+            height: auto;
+            line-height: 100%;
+            outline: none;
+            text-decoration: none;
+          }
+          
+          /* Main body styles */
           body {
-            margin: 0;
-            padding: 0;
-            background-color: ${this.emailSettings.backgroundColor};
-            font-family: ${this.emailSettings.fontFamily};
-            font-size: ${this.emailSettings.fontSize};
-            color: ${this.emailSettings.textColor};
+            margin: 0 !important;
+            padding: 0 !important;
+            background-color: ${this.emailSettings.backgroundColor} !important;
+            font-family: ${this.emailSettings.fontFamily} !important;
+            font-size: ${this.emailSettings.fontSize} !important;
+            color: ${this.emailSettings.textColor} !important;
           }
-          .email-container {
-            max-width: ${this.emailSettings.width};
-            margin: 0 auto;
-            background-color: ${this.emailSettings.contentBackgroundColor};
+          
+          /* Link styles */
+          a {
+            color: ${this.emailSettings.linkColor} !important;
+            text-decoration: underline;
           }
-          a { color: ${this.emailSettings.linkColor}; }
-          img { max-width: 100%; height: auto; }
-          .block-wrapper {
-            position: relative;
-            ${!isPreview ? 'transition: all 0.3s;' : ''}
+          
+          /* Responsive styles */
+          @media only screen and (max-width: 600px) {
+            .email-container {
+              width: 100% !important;
+              max-width: 100% !important;
+            }
+            .mobile-full-width {
+              width: 100% !important;
+              max-width: 100% !important;
+            }
+            .mobile-padding {
+              padding: 10px !important;
+            }
           }
-          ${!isPreview ? `.block-wrapper:hover {
-            outline: 2px dashed #2196F3;
-            outline-offset: -2px;
-          }` : ''}
-
-          /* Animation keyframes */
-          @keyframes fade-in {
-            from { opacity: 0; }
-            to { opacity: 1; }
-          }
-          @keyframes slide-up {
-            from { transform: translateY(20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-          }
-          @keyframes slide-down {
-            from { transform: translateY(-20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-          }
-          @keyframes zoom-in {
-            from { transform: scale(0.9); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
-          }
-
-          /* Visibility classes - handled by device preview mode instead of media queries */
-          .visibility-hidden { display: none !important; }
+          
+          /* Hide elements for preview mode */
+          ${!isPreview ? `.block-wrapper { border: 1px dashed #ddd; margin: 2px 0; }` : ''}
         </style>
       </head>
-      <body>
-        <div class="email-container">
-          ${blocks}
-        </div>
+      <body style="margin: 0; padding: 0; background-color: ${this.emailSettings.backgroundColor}; font-family: ${this.emailSettings.fontFamily}; font-size: ${this.emailSettings.fontSize}; color: ${this.emailSettings.textColor};">
+        <!-- Email Container Table -->
+        <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: ${this.emailSettings.backgroundColor};">
+          <tr>
+            <td align="center">
+              <table cellpadding="0" cellspacing="0" border="0" width="${emailWidth}" class="email-container" style="max-width: ${emailWidth}px; background-color: ${this.emailSettings.contentBackgroundColor};">
+                <tr>
+                  <td>
+                    ${blocks}
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
       </body>
       </html>
     `;
@@ -467,135 +495,202 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
 
   renderBlock(block: EmailBlock): string {
     const content = block.content || {};
-
-    // Handle advanced properties
-    const advancedStyles = this.getAdvancedStyles(content);
-    const advancedAttributes = this.getAdvancedAttributes(content);
-    const wrapperClasses = this.getWrapperClasses(content);
     const shouldRender = this.shouldRenderBlock(content);
+    const isPreview = this.viewMode === 'preview';
 
     if (!shouldRender) {
       return '';
     }
     
-    let blockHtml = '';
+    let blockContent = '';
 
     switch (block.type) {
       case 'header':
-        blockHtml = `
-          <div class="${wrapperClasses}" ${advancedAttributes} style="background-color: ${content.backgroundColor}; color: ${content.textColor}; text-align: ${content.alignment}; padding: 20px; min-height: ${content.height}; ${advancedStyles}">
-            ${content.customCSS ? `<style>${content.customCSS}</style>` : ''}
-            <h1 style="margin: 0; font-size: 28px;">${content.companyName}</h1>
-            <p style="margin: 10px 0 0 0; opacity: 0.9;">${content.tagline}</p>
-          </div>
+        blockContent = `
+          <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: ${content.backgroundColor || '#2196F3'};">
+            <tr>
+              <td align="${content.alignment || 'center'}" style="padding: 20px; color: ${content.textColor || '#ffffff'};">
+                <h1 style="margin: 0; font-size: 28px; font-family: Arial, sans-serif; font-weight: bold; color: ${content.textColor || '#ffffff'};">
+                  ${content.companyName || 'Your Company'}
+                </h1>
+                <p style="margin: 10px 0 0 0; font-size: 16px; color: ${content.textColor || '#ffffff'}; opacity: 0.9;">
+                  ${content.tagline || 'Your tagline here'}
+                </p>
+              </td>
+            </tr>
+          </table>
         `;
         break;
 
       case 'text':
-        blockHtml = `
-          <div class="${wrapperClasses}" ${advancedAttributes} style="padding: ${content.padding}; text-align: ${content.textAlign}; ${advancedStyles}">
-            ${content.customCSS ? `<style>${content.customCSS}</style>` : ''}
-            <div style="font-size: ${content.fontSize}; line-height: ${content.lineHeight};">
-              ${content.content}
-            </div>
-          </div>
+        blockContent = `
+          <table cellpadding="0" cellspacing="0" border="0" width="100%">
+            <tr>
+              <td style="padding: ${content.padding || '20px'}; text-align: ${content.textAlign || 'left'}; font-size: ${content.fontSize || '14px'}; line-height: ${content.lineHeight || '1.6'}; font-family: Arial, sans-serif;">
+                ${content.content || '<p>Enter your text content here.</p>'}
+              </td>
+            </tr>
+          </table>
         `;
         break;
 
       case 'image':
-        blockHtml = `
-          <div class="${wrapperClasses}" ${advancedAttributes} style="text-align: ${content.alignment}; padding: ${content.padding}; ${advancedStyles}">
-            ${content.customCSS ? `<style>${content.customCSS}</style>` : ''}
-            ${content.link ? `<a href="${content.link}">` : ''}
-            <img src="${content.src}" alt="${content.alt}" style="width: ${content.width}; height: auto;">
-            ${content.link ? '</a>' : ''}
-          </div>
+        const imageWidth = content.width === '100%' ? '100%' : (parseInt(content.width) || 600);
+        blockContent = `
+          <table cellpadding="0" cellspacing="0" border="0" width="100%">
+            <tr>
+              <td align="${content.alignment || 'center'}" style="padding: ${content.padding || '10px'};">
+                ${content.link ? `<a href="${content.link}" style="text-decoration: none;">` : ''}
+                <img src="${content.src || 'https://via.placeholder.com/600x300'}" alt="${content.alt || 'Image'}" 
+                     style="display: block; max-width: 100%; height: auto; border: 0; outline: none; text-decoration: none;" 
+                     width="${imageWidth}">
+                ${content.link ? '</a>' : ''}
+              </td>
+            </tr>
+          </table>
         `;
         break;
 
       case 'button':
-        blockHtml = `
-          <div class="${wrapperClasses}" ${advancedAttributes} style="text-align: ${content.alignment}; padding: 20px; ${advancedStyles}">
-            ${content.customCSS ? `<style>${content.customCSS}</style>` : ''}
-            <a href="${content.url}" style="display: inline-block; background-color: ${content.backgroundColor}; color: ${content.textColor}; padding: ${content.padding}; text-decoration: none; border-radius: ${content.borderRadius}; font-size: ${content.fontSize};">
-              ${content.text}
-            </a>
-          </div>
+        const buttonBgColor = content.backgroundColor || '#2196F3';
+        const buttonTextColor = content.textColor || '#ffffff';
+        const buttonPadding = content.padding || '12px 24px';
+        blockContent = `
+          <table cellpadding="0" cellspacing="0" border="0" width="100%">
+            <tr>
+              <td align="${content.alignment || 'center'}" style="padding: 20px;">
+                <table cellpadding="0" cellspacing="0" border="0" style="border-radius: ${content.borderRadius || '4px'}; background-color: ${buttonBgColor};">
+                  <tr>
+                    <td>
+                      <a href="${content.url || '#'}" style="display: inline-block; padding: ${buttonPadding}; background-color: ${buttonBgColor}; color: ${buttonTextColor}; text-decoration: none; font-size: ${content.fontSize || '16px'}; font-family: Arial, sans-serif; font-weight: bold; border-radius: ${content.borderRadius || '4px'};">
+                        ${content.text || 'Click Here'}
+                      </a>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
         `;
         break;
 
       case 'divider':
-        blockHtml = `
-          <div class="${wrapperClasses}" ${advancedAttributes} style="padding: 0; margin: ${content.margin}; ${advancedStyles}">
-            ${content.customCSS ? `<style>${content.customCSS}</style>` : ''}
-            <hr style="border: none; border-top: ${content.thickness} ${content.style} ${content.color}; width: ${content.width}; margin: 0 auto;">
-          </div>
+        const dividerColor = content.color || '#e0e0e0';
+        const dividerThickness = parseInt(content.thickness) || 1;
+        blockContent = `
+          <table cellpadding="0" cellspacing="0" border="0" width="100%">
+            <tr>
+              <td style="padding: ${content.margin || '20px 0'};">
+                <table cellpadding="0" cellspacing="0" border="0" width="${content.width || '100%'}" align="center">
+                  <tr>
+                    <td style="border-top: ${dividerThickness}px ${content.style || 'solid'} ${dividerColor}; font-size: 0; line-height: 0;">
+                      &nbsp;
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
         `;
         break;
 
       case 'columns':
-        const columnWidth = `${100 / content.count}%`;
+        const columnCount = content.count || 2;
+        const columnWidth = Math.floor(100 / columnCount);
         const gapValue = parseInt(content.gap) || 20;
         const bgColor = content.columnBackground || '#f9f9f9';
-        const columnsList = content.columns.map((column: any) =>
-          `<div style="width: ${columnWidth}; padding: 0 ${gapValue / 2}px; display: inline-block; vertical-align: top; box-sizing: border-box; font-size: 14px;">
-            <div style="padding: 15px; background: ${bgColor}; border: 1px dashed #ddd; min-height: 100px; border-radius: 4px;">
-              ${column.content || '<p style="color: #999;">Click to edit column content</p>'}
-            </div>
-          </div>`
-        ).join('');
-        blockHtml = `
-          <div class="${wrapperClasses}" ${advancedAttributes} style="padding: 20px; ${advancedStyles}">
-            ${content.customCSS ? `<style>${content.customCSS}</style>` : ''}
-            <div style="width: 100%; font-size: 0;">
-              ${columnsList}
-            </div>
-          </div>
+        const columnCells = content.columns?.map((column: any, index: number) =>
+          `<td width="${columnWidth}%" valign="top" style="padding: 0 ${gapValue / 2}px;">
+            <table cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>
+                <td style="padding: 15px; background-color: ${bgColor}; border: 1px dashed #ddd; font-family: Arial, sans-serif; font-size: 14px;">
+                  ${column.content || `<p style="color: #999; margin: 0;">Column ${index + 1} content</p>`}
+                </td>
+              </tr>
+            </table>
+          </td>`
+        ).join('') || '';
+        
+        blockContent = `
+          <table cellpadding="0" cellspacing="0" border="0" width="100%">
+            <tr>
+              <td style="padding: 20px;">
+                <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                  <tr>
+                    ${columnCells}
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
         `;
         break;
 
       case 'spacer':
-        blockHtml = `
-          <div class="${wrapperClasses}" ${advancedAttributes} style="height: ${content.height}; ${advancedStyles}">
-            ${content.customCSS ? `<style>${content.customCSS}</style>` : ''}
-          </div>
+        const spacerHeight = parseInt(content.height) || 30;
+        blockContent = `
+          <table cellpadding="0" cellspacing="0" border="0" width="100%">
+            <tr>
+              <td style="font-size: 0; line-height: 0; height: ${spacerHeight}px;">
+                &nbsp;
+              </td>
+            </tr>
+          </table>
         `;
         break;
 
       case 'video':
-        blockHtml = `
-          <div class="${wrapperClasses}" ${advancedAttributes} style="text-align: center; padding: 20px; ${advancedStyles}">
-            ${content.customCSS ? `<style>${content.customCSS}</style>` : ''}
-            <div style="position: relative; display: inline-block;">
-              <img src="${content.thumbnail}" alt="Video thumbnail" style="width: 100%; max-width: 500px; height: auto;">
-              <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 60px; height: 60px; background: ${content.playButtonBackground}; border-radius: ${content.playButtonStyle === 'circle' ? '50%' : '8px'}; display: flex; align-items: center; justify-content: center; cursor: pointer;">
-                <div style="width: 0; height: 0; border-left: 20px; ${content.playButtonColor}; border-top: 12px solid transparent; border-bottom: 12px solid transparent; margin-left: 4px;"></div>
-              </div>
-            </div>
-          </div>
+        // For email clients, we'll use a static thumbnail with a play button overlay
+        blockContent = `
+          <table cellpadding="0" cellspacing="0" border="0" width="100%">
+            <tr>
+              <td align="center" style="padding: 20px;">
+                <a href="${content.videoUrl || '#'}" style="display: inline-block; position: relative; text-decoration: none;">
+                  <img src="${content.thumbnail || 'https://via.placeholder.com/600x340'}" alt="Video thumbnail" 
+                       style="display: block; max-width: 500px; width: 100%; height: auto; border: 0;">
+                  <div style="position: absolute; top: 50%; left: 50%; width: 60px; height: 60px; margin-left: -30px; margin-top: -30px; background-color: ${content.playButtonBackground || 'rgba(0,0,0,0.7)'}; border-radius: ${content.playButtonStyle === 'circle' ? '30px' : '8px'};">
+                    <!-- Play button triangle -->
+                  </div>
+                </a>
+              </td>
+            </tr>
+          </table>
         `;
         break;
 
       case 'social':
-        const icons = content.platforms.map((platform: any) =>
-          `<a href="${platform.url}" style="text-decoration: none; margin: 0 ${content.spacing};">
-            <span style="font-size: ${content.iconSize};">${platform.icon}</span>
-          </a>`
-        ).join('');
-        blockHtml = `
-          <div class="${wrapperClasses}" ${advancedAttributes} style="text-align: ${content.alignment}; padding: 20px; ${advancedStyles}">
-            ${content.customCSS ? `<style>${content.customCSS}</style>` : ''}
-            ${icons}
-          </div>
+        const socialIcons = content.platforms?.map((platform: any) =>
+          `<td style="padding: 0 ${parseInt(content.spacing) / 2 || 5}px;">
+            <a href="${platform.url || '#'}" style="text-decoration: none; font-size: ${content.iconSize || '32px'};">
+              ${platform.icon || '📱'}
+            </a>
+          </td>`
+        ).join('') || '';
+        
+        blockContent = `
+          <table cellpadding="0" cellspacing="0" border="0" width="100%">
+            <tr>
+              <td align="${content.alignment || 'center'}" style="padding: 20px;">
+                <table cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    ${socialIcons}
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
         `;
         break;
 
       case 'html':
-        blockHtml = `
-          <div class="${wrapperClasses}" ${advancedAttributes} style="${advancedStyles}">
-            ${content.customCSS ? `<style>${content.customCSS}</style>` : ''}
-            ${content.code || content.html || ''}
-          </div>
+        blockContent = `
+          <table cellpadding="0" cellspacing="0" border="0" width="100%">
+            <tr>
+              <td>
+                ${content.code || content.html || '<!-- Custom HTML content -->'}
+              </td>
+            </tr>
+          </table>
         `;
         break;
 
@@ -603,8 +698,20 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
         return '';
     }
     
+    // Wrap each block in a table with optional border for edit mode
+    const borderStyle = !isPreview ? 'border: 1px dashed #ddd; margin: 2px 0;' : '';
+    const wrapperTable = `
+      <table cellpadding="0" cellspacing="0" border="0" width="100%" class="block-wrapper" style="${borderStyle}">
+        <tr>
+          <td>
+            ${blockContent}
+          </td>
+        </tr>
+      </table>
+    `;
+    
     // Wrap with block markers for parsing
-    return `<!-- block:${block.type}:start -->${blockHtml}<!-- block:${block.type}:end -->`;
+    return `<!-- block:${block.type}:start -->${wrapperTable}<!-- block:${block.type}:end -->`;
   }
 
   // UI Actions

@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { EditorConfig } from 'ngx-wysiwyg-editor';
+import { EditorConfig } from '../../../ngx-wysiwyg-editor/src/lib/wysiwyg-editor.component';
 
 @Component({
   selector: 'app-root',
