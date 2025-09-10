@@ -10,7 +10,7 @@ import { WysiwygEditorComponent } from '../../../ngx-wysiwyg-editor/src/lib/wysi
 })
 export class AppComponent {
   @ViewChild('editorComponent') editorComponent!: WysiwygEditorComponent;
-  
+
   title = 'Email Template Editor Demo';
 
   // Email template content

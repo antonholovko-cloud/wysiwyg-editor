@@ -543,6 +543,60 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
     `;
   }
 
+  // Helper function to properly encode and format URLs for SendGrid
+  private formatUrlForEmail(url: string | undefined): string {
+    if (!url || url === '#') return '#';
+    
+    // If URL doesn't have protocol, add https://
+    if (!url.match(/^https?:\/\//i)) {
+      url = 'https://' + url;
+    }
+    
+    // Encode special characters except those needed for URL structure
+    // SendGrid handles its own tracking parameters, so we keep URLs clean
+    return url.replace(/[<>"]/g, (char) => {
+      const entities: {[key: string]: string} = {
+        '<': '%3C',
+        '>': '%3E',
+        '"': '%22'
+      };
+      return entities[char] || char;
+    });
+  }
+
+  // Helper function to create bulletproof button HTML for better SendGrid compatibility
+  private createBulletproofButton(content: any): string {
+    const url = this.formatUrlForEmail(content.url);
+    const buttonBgColor = content.backgroundColor || '#2196F3';
+    const buttonTextColor = content.textColor || '#ffffff';
+    const buttonText = content.text || 'Click Here';
+    const borderRadius = content.borderRadius || '4px';
+    const fontSize = content.fontSize || '16px';
+    const padding = content.padding || '12px 24px';
+    
+    // Parse padding for VML
+    const paddingParts = padding.split(' ');
+    const verticalPadding = parseInt(paddingParts[0]) || 12;
+    const horizontalPadding = parseInt(paddingParts[1] || paddingParts[0]) || 24;
+    
+    // Calculate line height based on font size for better proportions
+    const lineHeight = parseInt(fontSize) * 1.2;
+    const buttonHeight = verticalPadding * 2 + lineHeight;
+    
+    return `
+      <!--[if mso]>
+      <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="${url}" style="height:${buttonHeight}px;v-text-anchor:middle;width:${buttonText.length * 8 + horizontalPadding * 2}px;" arcsize="${parseInt(borderRadius) * 10}%" stroke="f" fillcolor="${buttonBgColor}">
+        <w:anchorlock/>
+        <center>
+      <![endif]-->
+      <a href="${url}" target="_blank" rel="noopener noreferrer" style="background-color:${buttonBgColor};border-radius:${borderRadius};color:${buttonTextColor};display:inline-block;font-family:Arial,sans-serif;font-size:${fontSize};font-weight:bold;line-height:${lineHeight}px;text-align:center;text-decoration:none;width:auto;-webkit-text-size-adjust:none;padding:${padding};mso-padding-alt:0px;">${buttonText}</a>
+      <!--[if mso]>
+        </center>
+      </v:roundrect>
+      <![endif]-->
+    `;
+  }
+
   renderBlock(block: EmailBlock): string {
     const content = block.content || {};
     const shouldRender = this.shouldRenderBlock(content);
@@ -586,15 +640,18 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
 
       case 'image':
         const imageWidth = content.width === '100%' ? '100%' : (parseInt(content.width) || 600);
+        const imageUrl = this.formatUrlForEmail(content.link);
+        const hasLink = content.link && content.link !== '#';
+        
         blockContent = `
           <table cellpadding="0" cellspacing="0" border="0" width="100%">
             <tr>
               <td align="${content.alignment || 'center'}" style="padding: ${content.padding || '10px'};">
-                ${content.link ? `<a href="${content.link}" style="text-decoration: none;">` : ''}
+                ${hasLink ? `<a href="${imageUrl}" target="_blank" rel="noopener noreferrer" style="text-decoration: none; border: none; outline: none;">` : ''}
                 <img src="${content.src || 'https://via.placeholder.com/600x300'}" alt="${content.alt || 'Image'}"
-                     style="display: block; max-width: 100%; height: auto; border: 0; outline: none; text-decoration: none;"
+                     style="display: block; max-width: 100%; height: auto; border: 0; outline: none; text-decoration: none; -ms-interpolation-mode: bicubic;"
                      width="${imageWidth}">
-                ${content.link ? '</a>' : ''}
+                ${hasLink ? '</a>' : ''}
               </td>
             </tr>
           </table>
@@ -602,22 +659,11 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
         break;
 
       case 'button':
-        const buttonBgColor = content.backgroundColor || '#2196F3';
-        const buttonTextColor = content.textColor || '#ffffff';
-        const buttonPadding = content.padding || '12px 24px';
         blockContent = `
           <table cellpadding="0" cellspacing="0" border="0" width="100%">
             <tr>
               <td align="${content.alignment || 'center'}" style="padding: 20px;">
-                <table cellpadding="0" cellspacing="0" border="0" style="border-radius: ${content.borderRadius || '4px'}; background-color: ${buttonBgColor};">
-                  <tr>
-                    <td>
-                      <a href="${content.url || '#'}" style="display: inline-block; padding: ${buttonPadding}; background-color: ${buttonBgColor}; color: ${buttonTextColor}; text-decoration: none; font-size: ${content.fontSize || '16px'}; font-family: Arial, sans-serif; font-weight: bold; border-radius: ${content.borderRadius || '4px'};">
-                        ${content.text || 'Click Here'}
-                      </a>
-                    </td>
-                  </tr>
-                </table>
+                ${this.createBulletproofButton(content)}
               </td>
             </tr>
           </table>
@@ -691,16 +737,19 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
 
       case 'video':
         // For email clients, we'll use a static thumbnail with a play button overlay
+        const videoUrl = this.formatUrlForEmail(content.videoUrl);
         blockContent = `
           <table cellpadding="0" cellspacing="0" border="0" width="100%">
             <tr>
               <td align="center" style="padding: 20px;">
-                <a href="${content.videoUrl || '#'}" style="display: inline-block; position: relative; text-decoration: none;">
+                <a href="${videoUrl}" target="_blank" rel="noopener noreferrer" style="display: inline-block; position: relative; text-decoration: none; border: none; outline: none;">
                   <img src="${content.thumbnail || 'https://via.placeholder.com/600x340'}" alt="Video thumbnail"
-                       style="display: block; max-width: 500px; width: 100%; height: auto; border: 0;">
+                       style="display: block; max-width: 500px; width: 100%; height: auto; border: 0; -ms-interpolation-mode: bicubic;">
+                  <!--[if !mso]><!-->
                   <div style="position: absolute; top: 50%; left: 50%; width: 60px; height: 60px; margin-left: -30px; margin-top: -30px; background-color: ${content.playButtonBackground || 'rgba(0,0,0,0.7)'}; border-radius: ${content.playButtonStyle === 'circle' ? '30px' : '8px'};">
                     <!-- Play button triangle -->
                   </div>
+                  <!--<![endif]-->
                 </a>
               </td>
             </tr>
@@ -709,13 +758,14 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
         break;
 
       case 'social':
-        const socialIcons = content.platforms?.map((platform: any) =>
-          `<td style="padding: 0 ${parseInt(content.spacing) / 2 || 5}px;">
-            <a href="${platform.url || '#'}" style="text-decoration: none; font-size: ${content.iconSize || '32px'};">
+        const socialIcons = content.platforms?.map((platform: any) => {
+          const socialUrl = this.formatUrlForEmail(platform.url);
+          return `<td style="padding: 0 ${parseInt(content.spacing) / 2 || 5}px;">
+            <a href="${socialUrl}" target="_blank" rel="noopener noreferrer" style="text-decoration: none; font-size: ${content.iconSize || '32px'}; color: inherit; border: none; outline: none;">
               ${platform.icon || '📱'}
             </a>
-          </td>`
-        ).join('') || '';
+          </td>`;
+        }).join('') || '';
 
         blockContent = `
           <table cellpadding="0" cellspacing="0" border="0" width="100%">
@@ -1120,6 +1170,15 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
 
     // Also emit blocks separately for backward compatibility
     this.blocksChange.emit([...this.emailBlocks]);
+  }
+
+  // Public method to get current email content on demand
+  getEmailContent(): EmailContent {
+    return {
+      html: this.generateEmailHtml(),
+      blocks: [...this.emailBlocks],
+      settings: { ...this.emailSettings }
+    };
   }
 
   // Utility methods
