@@ -109,7 +109,7 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
     linkColor: '#2196F3',
     padding: '20px'
   };
-  
+
   get emailSettings() {
     return this._emailSettings;
   }
@@ -221,7 +221,7 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
     this.initializeConfig();
     this.loadDefaultTemplate();
     this.checkMobileView();
-    
+
     // Listen for window resize
     this.resizeListener = () => {
       this.checkMobileView();
@@ -259,7 +259,7 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
   private checkMobileView(): void {
     const wasMobile = this.isMobile;
     this.isMobile = window.innerWidth <= 768;
-    
+
     // On mobile, close panel by default when switching from desktop
     if (this.isMobile && !wasMobile) {
       this.showBlockPanel = false;
@@ -472,7 +472,7 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
         <style type="text/css">
           /* Reset styles for better email client compatibility */
           body, table, td, p, a, li, blockquote {
-            -webkit-text-size-adjust: 100%; 
+            -webkit-text-size-adjust: 100%;
             -ms-text-size-adjust: 100%;
           }
           table, td {
@@ -487,7 +487,7 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
             outline: none;
             text-decoration: none;
           }
-          
+
           /* Main body styles */
           body {
             margin: 0 !important;
@@ -497,13 +497,13 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
             font-size: ${this.emailSettings.fontSize} !important;
             color: ${this.emailSettings.textColor} !important;
           }
-          
+
           /* Link styles */
           a {
-            color: ${this.emailSettings.linkColor} !important;
+            color: ${this.emailSettings.linkColor};
             text-decoration: underline;
           }
-          
+
           /* Responsive styles */
           @media only screen and (max-width: 600px) {
             .email-container {
@@ -518,7 +518,7 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
               padding: 10px !important;
             }
           }
-          
+
           /* Hide elements for preview mode */
           ${!isPreview ? `.block-wrapper { border: 1px dashed #ddd; margin: 2px 0; }` : ''}
         </style>
@@ -551,7 +551,7 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
     if (!shouldRender) {
       return '';
     }
-    
+
     let blockContent = '';
 
     switch (block.type) {
@@ -591,8 +591,8 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
             <tr>
               <td align="${content.alignment || 'center'}" style="padding: ${content.padding || '10px'};">
                 ${content.link ? `<a href="${content.link}" style="text-decoration: none;">` : ''}
-                <img src="${content.src || 'https://via.placeholder.com/600x300'}" alt="${content.alt || 'Image'}" 
-                     style="display: block; max-width: 100%; height: auto; border: 0; outline: none; text-decoration: none;" 
+                <img src="${content.src || 'https://via.placeholder.com/600x300'}" alt="${content.alt || 'Image'}"
+                     style="display: block; max-width: 100%; height: auto; border: 0; outline: none; text-decoration: none;"
                      width="${imageWidth}">
                 ${content.link ? '</a>' : ''}
               </td>
@@ -660,7 +660,7 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
             </table>
           </td>`
         ).join('') || '';
-        
+
         blockContent = `
           <table cellpadding="0" cellspacing="0" border="0" width="100%">
             <tr>
@@ -696,7 +696,7 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
             <tr>
               <td align="center" style="padding: 20px;">
                 <a href="${content.videoUrl || '#'}" style="display: inline-block; position: relative; text-decoration: none;">
-                  <img src="${content.thumbnail || 'https://via.placeholder.com/600x340'}" alt="Video thumbnail" 
+                  <img src="${content.thumbnail || 'https://via.placeholder.com/600x340'}" alt="Video thumbnail"
                        style="display: block; max-width: 500px; width: 100%; height: auto; border: 0;">
                   <div style="position: absolute; top: 50%; left: 50%; width: 60px; height: 60px; margin-left: -30px; margin-top: -30px; background-color: ${content.playButtonBackground || 'rgba(0,0,0,0.7)'}; border-radius: ${content.playButtonStyle === 'circle' ? '30px' : '8px'};">
                     <!-- Play button triangle -->
@@ -716,7 +716,7 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
             </a>
           </td>`
         ).join('') || '';
-        
+
         blockContent = `
           <table cellpadding="0" cellspacing="0" border="0" width="100%">
             <tr>
@@ -747,7 +747,7 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
       default:
         return '';
     }
-    
+
     // Wrap each block in a table with optional border for edit mode
     const borderStyle = !isPreview ? 'border: 1px dashed #ddd; margin: 2px 0;' : '';
     const wrapperTable = `
@@ -759,7 +759,7 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
         </tr>
       </table>
     `;
-    
+
     // Wrap with block markers for parsing
     return `<!-- block:${block.type}:start -->${wrapperTable}<!-- block:${block.type}:end -->`;
   }
@@ -767,7 +767,7 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
   // UI Actions
   toggleBlockPanel(): void {
     this.showBlockPanel = !this.showBlockPanel;
-    
+
     // On mobile, open with blocks tab by default
     if (this.isMobile && this.showBlockPanel) {
       this.activeTab = 'blocks';
@@ -897,9 +897,9 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
       font-size: 14px;
       transition: all 0.3s ease;
     `;
-    
+
     document.body.appendChild(notification);
-    
+
     // Auto-remove after 3 seconds
     setTimeout(() => {
       notification.style.opacity = '0';
@@ -996,9 +996,9 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
       // No change needed if same value and blocks exist
       return;
     }
-    
+
     this.content = value || '';
-    
+
     // If we receive HTML content, try to parse it into blocks
     if (value && value.trim()) {
       this.parseHtmlToBlocks(value);
@@ -1008,31 +1008,31 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
       this.selectedBlock = null;
       this.selectedBlockIndex = -1;
     }
-    
+
     // Trigger change detection and update the preview
     this.cdr.detectChanges();
-    
+
     // Update the preview after change detection
     setTimeout(() => {
       this.renderEmail();
       this.cdr.detectChanges();
     }, 0);
   }
-  
+
   private parseHtmlToBlocks(html: string): void {
     // Try to extract blocks from the HTML content
     // This is a simplified parser - in production, you'd want a more robust solution
     this.emailBlocks = [];
-    
+
     // Check if it's our generated HTML with block markers
     const blockMatches = html.match(/<!-- block:(\w+):start -->([\s\S]*?)<!-- block:\w+:end -->/g);
-    
+
     if (blockMatches && blockMatches.length > 0) {
       // Parse our marked blocks
       blockMatches.forEach(match => {
         const typeMatch = match.match(/<!-- block:(\w+):start -->/);
         const contentMatch = match.match(/<!-- block:\w+:start -->([\s\S]*?)<!-- block:\w+:end -->/);
-        
+
         if (typeMatch && contentMatch) {
           const type = typeMatch[1];
           const blockHtml = contentMatch[1];
@@ -1048,8 +1048,8 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
       const htmlBlock: EmailBlock = {
         id: this.generateId(),
         type: 'html',
-        content: { 
-          ...this.blockTemplates['html'], 
+        content: {
+          ...this.blockTemplates['html'],
           code: html  // Use 'code' property, not 'html'
         },
         settings: {}
@@ -1057,7 +1057,7 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
       this.emailBlocks.push(htmlBlock);
     }
   }
-  
+
   private parseBlockFromHtml(type: string, html: string): EmailBlock | null {
     const block: EmailBlock = {
       id: this.generateId(),
@@ -1065,7 +1065,7 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
       content: { ...this.blockTemplates[type] },
       settings: {}
     };
-    
+
     // Parse content based on block type
     switch (type) {
       case 'text':
@@ -1090,7 +1090,7 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
         block.content = { ...this.blockTemplates['html'], code: html };
         break;
     }
-    
+
     return block;
   }
 
@@ -1109,7 +1109,7 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
   private emitChange(): void {
     const html = this.generateEmailHtml();
     this.onChange(html);
-    
+
     // Emit comprehensive content model
     const emailContent: EmailContent = {
       html: html,
@@ -1117,7 +1117,7 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
       settings: this.emailSettings
     };
     this.contentChange.emit(emailContent);
-    
+
     // Also emit blocks separately for backward compatibility
     this.blocksChange.emit([...this.emailBlocks]);
   }
