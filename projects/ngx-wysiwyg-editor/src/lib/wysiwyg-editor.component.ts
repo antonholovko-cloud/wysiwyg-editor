@@ -56,6 +56,25 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
       this.emitChange();
     }
   }
+  @Input() set emailSettings(value: any) {
+    if (value && typeof value === 'object') {
+      this._emailSettings = { ...this._emailSettings, ...value };
+      this.renderEmail();
+      this.emitChange();
+    }
+  }
+  @Input() set initialContent(value: EmailContent) {
+    if (value && typeof value === 'object') {
+      if (value.blocks && Array.isArray(value.blocks)) {
+        this.emailBlocks = [...value.blocks];
+      }
+      if (value.settings && typeof value.settings === 'object') {
+        this._emailSettings = { ...this._emailSettings, ...value.settings };
+      }
+      this.renderEmail();
+      this.emitChange();
+    }
+  }
 
   @Output() contentChange = new EventEmitter<EmailContent>();
   @Output() blockSelected = new EventEmitter<EmailBlock>();
@@ -80,7 +99,7 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
   private resizeListener: any;
 
   // Email settings
-  emailSettings = {
+  private _emailSettings = {
     width: '600px',
     backgroundColor: '#f4f4f4',
     contentBackgroundColor: '#ffffff',
@@ -90,6 +109,10 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
     linkColor: '#2196F3',
     padding: '20px'
   };
+  
+  get emailSettings() {
+    return this._emailSettings;
+  }
 
   // Available blocks
   availableBlocks = [
