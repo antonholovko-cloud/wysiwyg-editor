@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { EditorConfig } from '../../../ngx-wysiwyg-editor/src/lib/wysiwyg-editor.component';
+import { EditorConfig, EmailContent, EmailBlock } from '../../../ngx-wysiwyg-editor/src/lib/wysiwyg-editor.component';
+import { WysiwygEditorComponent } from '../../../ngx-wysiwyg-editor/src/lib/wysiwyg-editor.component';
 
 @Component({
   selector: 'app-root',
@@ -8,10 +9,16 @@ import { EditorConfig } from '../../../ngx-wysiwyg-editor/src/lib/wysiwyg-editor
   styleUrls: ['./app.scss']
 })
 export class AppComponent {
+  @ViewChild('editorComponent') editorComponent!: WysiwygEditorComponent;
+  
   title = 'Email Template Editor Demo';
 
   // Email template content
   emailContent = '';
+
+  // External blocks management
+  externalBlocks: EmailBlock[] = [];
+  currentBlocks: EmailBlock[] | null = null;
 
   // Form example
   form: FormGroup;
@@ -70,9 +77,11 @@ export class AppComponent {
     });
   }
 
-  onContentChange(content: string): void {
-    this.emailContent = content;
+  onContentChange(content: EmailContent): void {
+    this.emailContent = content.html;
     console.log('Email template content changed:', content);
+    console.log('Blocks:', content.blocks);
+    console.log('Settings:', content.settings);
   }
 
   onBlockSelected(block: any): void {
@@ -192,5 +201,101 @@ export class AppComponent {
     });
     this.formSubmitResult = null;
     console.log('Form cleared');
+  }
+
+  // External Block Management Methods
+  onBlocksChange(blocks: EmailBlock[]): void {
+    console.log('Blocks changed:', blocks);
+  }
+
+  addCustomBlock(): void {
+    const customBlock: EmailBlock = {
+      id: `custom_${Date.now()}`,
+      type: 'text',
+      content: {
+        content: '<h2>Custom Added Block</h2><p>This block was added programmatically from the demo component.</p>',
+        padding: '20px',
+        fontSize: '14px',
+        lineHeight: '1.6',
+        textAlign: 'center',
+        cssClass: 'custom-block'
+      }
+    };
+
+    if (this.editorComponent) {
+      const currentBlocks = this.editorComponent.getBlocks();
+      this.editorComponent.setBlocks([...currentBlocks, customBlock]);
+    }
+  }
+
+  loadPresetTemplate(): void {
+    const presetBlocks: EmailBlock[] = [
+      {
+        id: 'preset_header',
+        type: 'header',
+        content: {
+          companyName: 'Demo Company',
+          tagline: 'Preset Template Example',
+          backgroundColor: '#4CAF50',
+          textColor: '#ffffff',
+          height: '100px',
+          alignment: 'center'
+        }
+      },
+      {
+        id: 'preset_text',
+        type: 'text',
+        content: {
+          content: '<h2>Welcome to the Preset Template!</h2><p>This template was loaded programmatically using the external blocks management API.</p>',
+          padding: '30px',
+          fontSize: '14px',
+          lineHeight: '1.8',
+          textAlign: 'center'
+        }
+      },
+      {
+        id: 'preset_columns',
+        type: 'columns',
+        content: {
+          count: 2,
+          gap: '20px',
+          columnBackground: '#f0f0f0',
+          columns: [
+            { content: '<h3>Feature 1</h3><p>Amazing features for your email campaigns.</p>' },
+            { content: '<h3>Feature 2</h3><p>Easy to use and customize templates.</p>' }
+          ]
+        }
+      },
+      {
+        id: 'preset_button',
+        type: 'button',
+        content: {
+          text: 'Get Started',
+          url: 'https://example.com',
+          backgroundColor: '#4CAF50',
+          textColor: '#ffffff',
+          borderRadius: '8px',
+          padding: '15px 30px',
+          fontSize: '18px',
+          alignment: 'center'
+        }
+      }
+    ];
+
+    this.externalBlocks = presetBlocks;
+  }
+
+  getBlocksFromEditor(): void {
+    if (this.editorComponent) {
+      this.currentBlocks = this.editorComponent.getBlocks();
+      console.log('Retrieved blocks from editor:', this.currentBlocks);
+    }
+  }
+
+  clearBlocks(): void {
+    if (confirm('Are you sure you want to clear all blocks?')) {
+      this.externalBlocks = [];
+      this.currentBlocks = null;
+    }
   }
 }

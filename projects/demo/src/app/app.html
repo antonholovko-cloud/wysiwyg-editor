@@ -10,11 +10,37 @@
     <section class="demo-section full-height">
       <div class="editor-wrapper">
         <wysiwyg-editor
+          #editorComponent
           [(ngModel)]="emailContent"
           [config]="defaultConfig"
+          [blocks]="externalBlocks"
           (contentChange)="onContentChange($event)"
-          (blockSelected)="onBlockSelected($event)">
+          (blockSelected)="onBlockSelected($event)"
+          (blocksChange)="onBlocksChange($event)">
         </wysiwyg-editor>
+      </div>
+    </section>
+
+    <!-- External Block Management Demo -->
+    <section class="demo-section">
+      <h3>External Block Management</h3>
+      <div class="control-buttons">
+        <button (click)="addCustomBlock()" class="btn btn-primary">
+          Add Custom Block
+        </button>
+        <button (click)="loadPresetTemplate()" class="btn btn-secondary">
+          Load Preset Template
+        </button>
+        <button (click)="getBlocksFromEditor()" class="btn btn-outline">
+          Get Current Blocks
+        </button>
+        <button (click)="clearBlocks()" class="btn btn-danger">
+          Clear All Blocks
+        </button>
+      </div>
+      <div *ngIf="currentBlocks" class="blocks-display">
+        <h4>Current Blocks ({{ currentBlocks.length }})</h4>
+        <pre>{{ currentBlocks | json }}</pre>
       </div>
     </section>
 

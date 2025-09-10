@@ -11,6 +11,12 @@ export interface EmailBlock {
   settings?: any;
 }
 
+export interface EmailContent {
+  html: string;
+  blocks: EmailBlock[];
+  settings?: any;
+}
+
 export interface EditorConfig {
   theme?: 'light' | 'dark';
   showBlockPanel?: boolean;
@@ -43,9 +49,17 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
 
   @Input() config: EditorConfig = {};
   @Input() disabled = false;
+  @Input() set blocks(value: EmailBlock[]) {
+    if (value && Array.isArray(value)) {
+      this.emailBlocks = [...value];
+      this.renderEmail();
+      this.emitChange();
+    }
+  }
 
-  @Output() contentChange = new EventEmitter<string>();
+  @Output() contentChange = new EventEmitter<EmailContent>();
   @Output() blockSelected = new EventEmitter<EmailBlock>();
+  @Output() blocksChange = new EventEmitter<EmailBlock[]>();
 
   // Editor state
   emailBlocks: EmailBlock[] = [];
@@ -62,6 +76,7 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
   devicePreview: 'mobile' | 'tablet' | 'desktop' = 'desktop';
   viewMode: 'edit' | 'preview' = 'edit';
   isMobile = false;
+  showExportDropdown = false;
   private resizeListener: any;
 
   // Email settings
@@ -189,6 +204,18 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
       this.checkMobileView();
     };
     window.addEventListener('resize', this.resizeListener);
+
+    // Listen for clicks to close dropdown
+    document.addEventListener('click', (event) => {
+      if (this.showExportDropdown) {
+        const target = event.target as HTMLElement;
+        const dropdown = target.closest('.export-dropdown');
+        if (!dropdown) {
+          this.showExportDropdown = false;
+          this.cdr.detectChanges();
+        }
+      }
+    });
   }
 
   ngOnDestroy(): void {
@@ -794,7 +821,24 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
     }
   }
 
-  exportHtml(): void {
+  // Export dropdown methods
+  toggleExportDropdown(): void {
+    this.showExportDropdown = !this.showExportDropdown;
+  }
+
+  exportToClipboard(): void {
+    const html = this.generateEmailHtml();
+    navigator.clipboard.writeText(html).then(() => {
+      // Show success feedback
+      this.showNotification('HTML copied to clipboard successfully!');
+    }).catch(err => {
+      console.error('Failed to copy to clipboard:', err);
+      this.showNotification('Failed to copy to clipboard. Please try again.');
+    });
+    this.showExportDropdown = false;
+  }
+
+  exportToFile(): void {
     const html = this.generateEmailHtml();
     const blob = new Blob([html], { type: 'text/html' });
     const url = window.URL.createObjectURL(blob);
@@ -803,6 +847,46 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
     a.download = 'email-template.html';
     a.click();
     window.URL.revokeObjectURL(url);
+    this.showExportDropdown = false;
+  }
+
+  // Legacy method for backward compatibility
+  exportHtml(): void {
+    this.exportToFile();
+  }
+
+  private showNotification(message: string): void {
+    // Simple notification implementation
+    // You could replace this with a more sophisticated notification system
+    const notification = document.createElement('div');
+    notification.textContent = message;
+    notification.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #4CAF50;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 4px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      z-index: 10000;
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+      transition: all 0.3s ease;
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto-remove after 3 seconds
+    setTimeout(() => {
+      notification.style.opacity = '0';
+      notification.style.transform = 'translateY(-20px)';
+      setTimeout(() => {
+        if (notification.parentNode) {
+          notification.parentNode.removeChild(notification);
+        }
+      }, 300);
+    }, 3000);
   }
 
   clearAll(): void {
@@ -810,6 +894,52 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
       this.emailBlocks = [];
       this.selectedBlock = null;
       this.selectedBlockIndex = -1;
+      this.renderEmail();
+      this.emitChange();
+    }
+  }
+
+  // Public API methods for external block management
+  getBlocks(): EmailBlock[] {
+    return [...this.emailBlocks];
+  }
+
+  setBlocks(blocks: EmailBlock[]): void {
+    if (blocks && Array.isArray(blocks)) {
+      this.emailBlocks = [...blocks];
+      this.selectedBlock = null;
+      this.selectedBlockIndex = -1;
+      this.renderEmail();
+      this.emitChange();
+    }
+  }
+
+  addBlockAtIndex(block: EmailBlock, index: number): void {
+    if (block && index >= 0 && index <= this.emailBlocks.length) {
+      this.emailBlocks.splice(index, 0, block);
+      this.renderEmail();
+      this.emitChange();
+    }
+  }
+
+  removeBlockAtIndex(index: number): void {
+    if (index >= 0 && index < this.emailBlocks.length) {
+      this.emailBlocks.splice(index, 1);
+      if (this.selectedBlockIndex === index) {
+        this.selectedBlock = null;
+        this.selectedBlockIndex = -1;
+      }
+      this.renderEmail();
+      this.emitChange();
+    }
+  }
+
+  updateBlockAtIndex(index: number, block: EmailBlock): void {
+    if (block && index >= 0 && index < this.emailBlocks.length) {
+      this.emailBlocks[index] = block;
+      if (this.selectedBlockIndex === index) {
+        this.selectedBlock = block;
+      }
       this.renderEmail();
       this.emitChange();
     }
@@ -956,7 +1086,17 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
   private emitChange(): void {
     const html = this.generateEmailHtml();
     this.onChange(html);
-    this.contentChange.emit(html);
+    
+    // Emit comprehensive content model
+    const emailContent: EmailContent = {
+      html: html,
+      blocks: [...this.emailBlocks],
+      settings: this.emailSettings
+    };
+    this.contentChange.emit(emailContent);
+    
+    // Also emit blocks separately for backward compatibility
+    this.blocksChange.emit([...this.emailBlocks]);
   }
 
   // Utility methods
