@@ -17,6 +17,17 @@ export interface EmailContent {
   settings?: any;
 }
 
+export interface ToolbarConfig {
+  showBlocksButton?: boolean;
+  showSettingsButton?: boolean;
+  showSaveButton?: boolean;
+  showLoadButton?: boolean;
+  showExportButton?: boolean;
+  showDeviceSelector?: boolean;
+  showViewModeToggle?: boolean;
+  showClearAllButton?: boolean;
+}
+
 export interface EditorConfig {
   theme?: 'light' | 'dark';
   showBlockPanel?: boolean;
@@ -27,6 +38,7 @@ export interface EditorConfig {
   height?: string;
   minHeight?: string;
   maxHeight?: string;
+  toolbar?: ToolbarConfig;
 }
 
 @Component({
@@ -264,6 +276,21 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
     if (this.isMobile && !wasMobile) {
       this.showBlockPanel = false;
     }
+  }
+
+  // Getter for toolbar configuration with defaults
+  get toolbarConfig(): ToolbarConfig {
+    return {
+      showBlocksButton: true,
+      showSettingsButton: true,
+      showSaveButton: false,
+      showLoadButton: false,
+      showExportButton: true,
+      showDeviceSelector: true,
+      showViewModeToggle: true,
+      showClearAllButton: true,
+      ...(this.config.toolbar || {})
+    };
   }
 
   private initializeConfig(): void {
@@ -546,12 +573,12 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
   // Helper function to properly encode and format URLs for SendGrid
   private formatUrlForEmail(url: string | undefined): string {
     if (!url || url === '#') return '#';
-    
+
     // If URL doesn't have protocol, add https://
     if (!url.match(/^https?:\/\//i)) {
       url = 'https://' + url;
     }
-    
+
     // Encode special characters except those needed for URL structure
     // SendGrid handles its own tracking parameters, so we keep URLs clean
     return url.replace(/[<>"]/g, (char) => {
@@ -573,16 +600,16 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
     const borderRadius = content.borderRadius || '4px';
     const fontSize = content.fontSize || '16px';
     const padding = content.padding || '12px 24px';
-    
+
     // Parse padding for VML
     const paddingParts = padding.split(' ');
     const verticalPadding = parseInt(paddingParts[0]) || 12;
     const horizontalPadding = parseInt(paddingParts[1] || paddingParts[0]) || 24;
-    
+
     // Calculate line height based on font size for better proportions
     const lineHeight = parseInt(fontSize) * 1.2;
     const buttonHeight = verticalPadding * 2 + lineHeight;
-    
+
     return `
       <!--[if mso]>
       <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="${url}" style="height:${buttonHeight}px;v-text-anchor:middle;width:${buttonText.length * 8 + horizontalPadding * 2}px;" arcsize="${parseInt(borderRadius) * 10}%" stroke="f" fillcolor="${buttonBgColor}">
@@ -642,7 +669,7 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
         const imageWidth = content.width === '100%' ? '100%' : (parseInt(content.width) || 600);
         const imageUrl = this.formatUrlForEmail(content.link);
         const hasLink = content.link && content.link !== '#';
-        
+
         blockContent = `
           <table cellpadding="0" cellspacing="0" border="0" width="100%">
             <tr>

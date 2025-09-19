@@ -231,6 +231,8 @@ The padding values are applied as inline CSS styles to the selected element and 
 
 ## Configuration Options
 
+### Editor Configuration
+
 | Property | Type | Default | Description |
 |----------|------|---------|-------------|
 | `height` | string | '400px' | Editor height |
@@ -240,6 +242,69 @@ The padding values are applied as inline CSS styles to the selected element and 
 | `showToolbar` | boolean | true | Show/hide toolbar |
 | `customButtons` | EditorCommand[] | null | Custom toolbar buttons |
 | `defaultParagraphSeparator` | string | 'p' | Default block element |
+| `toolbar` | ToolbarConfig | See below | Toolbar visibility configuration |
+
+### Toolbar Configuration
+
+You can control which button groups are displayed in the toolbar by providing a `toolbar` configuration object:
+
+```typescript
+import { EditorConfig } from 'ngx-wysiwyg-editor';
+
+export class MyComponent {
+  editorConfig: EditorConfig = {
+    height: '500px',
+    toolbar: {
+      showBlocksButton: true,      // Show/hide "Blocks" button (default: true)
+      showSettingsButton: true,    // Show/hide "Settings" button (default: true)
+      showSaveButton: true,        // Show/hide "Save" button (default: true)
+      showLoadButton: true,        // Show/hide "Load" button (default: true)
+      showExportButton: true,      // Show/hide "Export" dropdown (default: true)
+      showDeviceSelector: true,    // Show/hide device preview selector (default: true)
+      showViewModeToggle: true,    // Show/hide Edit/Preview mode toggle (default: true)
+      showClearAllButton: true     // Show/hide "Clear All" button (default: true)
+    }
+  };
+}
+```
+
+#### Example: Minimal Toolbar
+
+To create a minimal toolbar with only essential buttons:
+
+```typescript
+editorConfig: EditorConfig = {
+  toolbar: {
+    showBlocksButton: true,
+    showSettingsButton: false,
+    showSaveButton: false,
+    showLoadButton: false,
+    showExportButton: true,
+    showDeviceSelector: false,
+    showViewModeToggle: true,
+    showClearAllButton: false
+  }
+};
+```
+
+#### Example: Export-Only Toolbar
+
+For a read-only view with export capabilities:
+
+```typescript
+editorConfig: EditorConfig = {
+  toolbar: {
+    showBlocksButton: false,
+    showSettingsButton: false,
+    showSaveButton: false,
+    showLoadButton: false,
+    showExportButton: true,
+    showDeviceSelector: true,
+    showViewModeToggle: true,
+    showClearAllButton: false
+  }
+};
+```
 
 ## Available Commands
 

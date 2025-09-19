@@ -5,7 +5,10 @@
   <!-- Top Toolbar -->
   <div class="editor-toolbar">
     <div class="toolbar-left">
-      <button type="button" class="toolbar-btn" (click)="toggleBlockPanel()" [class.active]="showBlockPanel">
+      <button type="button" class="toolbar-btn"
+              *ngIf="toolbarConfig.showBlocksButton"
+              (click)="toggleBlockPanel()"
+              [class.active]="showBlockPanel">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <rect x="3" y="3" width="7" height="7"></rect>
           <rect x="14" y="3" width="7" height="7"></rect>
@@ -14,7 +17,9 @@
         </svg>
         Blocks
       </button>
-      <button type="button" class="toolbar-btn" (click)="showSettingsTab()">
+      <button type="button" class="toolbar-btn"
+              *ngIf="toolbarConfig.showSettingsButton"
+              (click)="showSettingsTab()">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="3"></circle>
           <path d="M12 1v6m0 6v6m4.22-13.22l4.24 4.24M1.54 19.54l4.24-4.24M22.46 19.54l-4.24-4.24M1.54 4.46l4.24 4.24"></path>
@@ -28,7 +33,9 @@
     </div>
 
     <div class="toolbar-right">
-      <button type="button" class="toolbar-btn" (click)="saveTemplate()">
+      <button type="button" class="toolbar-btn"
+              *ngIf="toolbarConfig.showSaveButton"
+              (click)="saveTemplate()">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"></path>
           <polyline points="17 21 17 13 7 13 7 21"></polyline>
@@ -36,7 +43,9 @@
         </svg>
         Save
       </button>
-      <button type="button" class="toolbar-btn" (click)="loadTemplate()">
+      <button type="button" class="toolbar-btn"
+              *ngIf="toolbarConfig.showLoadButton"
+              (click)="loadTemplate()">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"></path>
           <polyline points="7 10 12 15 17 10"></polyline>
@@ -44,7 +53,9 @@
         </svg>
         Load
       </button>
-      <div class="export-dropdown" [class.open]="showExportDropdown">
+      <div class="export-dropdown"
+           *ngIf="toolbarConfig.showExportButton"
+           [class.open]="showExportDropdown">
         <button type="button" class="toolbar-btn primary dropdown-toggle" (click)="toggleExportDropdown()">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"></path>
@@ -162,7 +173,7 @@
     <!-- Center - Email Canvas -->
     <div class="email-canvas-container">
       <div class="canvas-header">
-        <div class="device-selector">
+        <div class="device-selector" *ngIf="toolbarConfig.showDeviceSelector">
           <button type="button" class="device-btn"
                   [class.active]="devicePreview === 'mobile'"
                   (click)="setDevicePreview('mobile')"
@@ -200,7 +211,7 @@
           <span class="device-size">{{ getDeviceWidth() }}</span>
         </div>
 
-        <div class="view-mode-toggle">
+        <div class="view-mode-toggle" *ngIf="toolbarConfig.showViewModeToggle">
           <button type="button" class="view-btn"
                   [class.active]="viewMode === 'edit'"
                   (click)="setViewMode('edit')"
@@ -223,7 +234,9 @@
           </button>
         </div>
 
-        <button type="button" class="clear-btn" (click)="clearAll()">
+        <button type="button" class="clear-btn"
+                *ngIf="toolbarConfig.showClearAllButton"
+                (click)="clearAll()">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polyline points="3 6 5 6 21 6"></polyline>
             <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"></path>
