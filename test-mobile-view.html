@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile View Test - WYSIWYG Editor</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f6f8;
+        }
+        
+        .device-container {
+            margin: 0 auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        h2 {
+            margin: 0 0 20px 0;
+            color: #333;
+        }
+        
+        .device-frame {
+            position: relative;
+            margin: 0 auto;
+            background: #000;
+            border-radius: 36px;
+            padding: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        .mobile {
+            width: 375px;
+            height: 812px;
+        }
+        
+        .tablet {
+            width: 768px;
+            height: 1024px;
+        }
+        
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 26px;
+            background: white;
+        }
+        
+        .controls {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        button {
+            padding: 10px 20px;
+            margin: 0 5px;
+            background: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        button:hover {
+            background: #1976D2;
+        }
+        
+        button.active {
+            background: #1565C0;
+        }
+        
+        .info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e8f4ff;
+            border-radius: 4px;
+            color: #1976D2;
+        }
+        
+        .info h3 {
+            margin: 0 0 10px 0;
+        }
+        
+        .info ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        
+        .info li {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="device-container">
+        <h2>WYSIWYG Editor - Mobile Responsiveness Test</h2>
+        
+        <div class="controls">
+            <button id="mobile-btn" class="active" onclick="setDevice('mobile')">Mobile (375px)</button>
+            <button id="tablet-btn" onclick="setDevice('tablet')">Tablet (768px)</button>
+            <button id="desktop-btn" onclick="setDevice('desktop')">Desktop</button>
+        </div>
+        
+        <div id="device-frame" class="device-frame mobile">
+            <iframe src="http://localhost:4200"></iframe>
+        </div>
+        
+        <div class="info">
+            <h3>Mobile Features Added:</h3>
+            <ul>
+                <li>✅ Properties panel slides in from the right on mobile</li>
+                <li>✅ Mobile backdrop overlay for both panels</li>
+                <li>✅ Floating "Properties" button appears when a block is selected</li>
+                <li>✅ Touch-friendly close button in properties panel</li>
+                <li>✅ Blocks panel transforms into bottom drawer on mobile</li>
+                <li>✅ Proper scrolling for panel content on mobile</li>
+                <li>✅ Responsive toolbar with larger touch targets</li>
+            </ul>
+            <p><strong>To test:</strong> Select a block in the editor, then tap the floating "Properties" button to open the properties panel on mobile view.</p>
+        </div>
+    </div>
+    
+    <script>
+        function setDevice(device) {
+            const frame = document.getElementById('device-frame');
+            const buttons = document.querySelectorAll('button');
+            
+            buttons.forEach(btn => btn.classList.remove('active'));
+            
+            if (device === 'mobile') {
+                frame.className = 'device-frame mobile';
+                document.getElementById('mobile-btn').classList.add('active');
+            } else if (device === 'tablet') {
+                frame.className = 'device-frame tablet';
+                document.getElementById('tablet-btn').classList.add('active');
+            } else {
+                frame.className = 'device-frame';
+                frame.style.width = '100%';
+                frame.style.height = '800px';
+                document.getElementById('desktop-btn').classList.add('active');
+            }
+        }
+    </script>
+</body>
+</html>

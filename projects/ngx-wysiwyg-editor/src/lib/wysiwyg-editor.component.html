@@ -91,8 +91,11 @@
     </div>
   </div>
 
-  <!-- Mobile backdrop -->
+  <!-- Mobile backdrop for blocks panel -->
   <div class="mobile-backdrop" [class.active]="showBlockPanel && isMobile" (click)="closeMobilePanel()"></div>
+
+  <!-- Mobile backdrop for properties panel -->
+  <div class="mobile-backdrop properties-backdrop" [class.active]="showPropertiesPanel && selectedBlock && isMobile" (click)="closePropertiesPanel()"></div>
 
   <div class="editor-main">
     <!-- Left Panel - Blocks -->
@@ -318,10 +321,22 @@
       </div>
     </div>
 
+    <!-- Mobile Properties Button (shown only when block is selected on mobile) -->
+    <button type="button"
+            class="mobile-properties-btn"
+            *ngIf="selectedBlock && isMobile && !showPropertiesPanel"
+            (click)="showPropertiesPanel = true">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M12 1v6m0 6v6m4.22-13.22l4.24 4.24M1.54 19.54l4.24-4.24M22.46 19.54l-4.24-4.24M1.54 4.46l4.24 4.24"></path>
+      </svg>
+      Properties
+    </button>
+
     <!-- Right Panel - Properties -->
     <div class="properties-panel" [class.collapsed]="!showPropertiesPanel" *ngIf="selectedBlock">
       <div class="panel-header">
-        <h3>{{ getBlockLabel(selectedBlock.type) }} Properties</h3>
+        <h3>Properties</h3>
         <button type="button" class="close-btn" (click)="showPropertiesPanel = false">×</button>
       </div>
 
@@ -332,12 +347,13 @@
       </div>
 
       <div class="properties-content">
+        <h3>{{ getBlockLabel(selectedBlock.type) }} </h3>
         <!-- Content Tab -->
         <div *ngIf="activePropertiesTab === 'content'">
           <!-- Header Block Properties -->
           <div *ngIf="selectedBlock.type === 'header'" class="property-fields">
             <div class="form-group">
-              <label>Company Name</label>
+              <label>Header</label>
               <input type="text" [(ngModel)]="currentBlockProperties.companyName"
                      (change)="updateBlockProperty('companyName', currentBlockProperties.companyName)" />
             </div>

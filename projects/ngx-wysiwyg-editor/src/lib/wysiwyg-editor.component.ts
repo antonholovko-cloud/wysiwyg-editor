@@ -866,6 +866,12 @@ export class WysiwygEditorComponent implements ControlValueAccessor, OnInit, Aft
     }
   }
 
+  closePropertiesPanel(): void {
+    if (this.isMobile) {
+      this.showPropertiesPanel = false;
+    }
+  }
+
   // Device preview methods
   setDevicePreview(device: 'mobile' | 'tablet' | 'desktop'): void {
     this.devicePreview = device;
