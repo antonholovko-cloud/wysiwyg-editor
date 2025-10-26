@@ -1,11 +1,9 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
 
 import { AppComponent } from './app';
 import { WysiwygEditorComponent } from '../../../ngx-wysiwyg-editor/src/lib/wysiwyg-editor.component';
-import { routes } from './app.routes';
 
 @NgModule({
   declarations: [
@@ -15,8 +13,7 @@ import { routes } from './app.routes';
     BrowserModule,
     FormsModule,
     ReactiveFormsModule,
-    WysiwygEditorComponent,
-    RouterModule.forRoot(routes)
+    WysiwygEditorComponent
   ],
   providers: [],
   bootstrap: [AppComponent]
