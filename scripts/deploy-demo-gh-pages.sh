@@ -52,7 +52,7 @@ echo -e "${YELLOW}Cleaning up gh-pages cache...${NC}"
 rm -rf node_modules/.cache/gh-pages 2>/dev/null || true
 
 echo -e "${YELLOW}Deploying to GitHub Pages...${NC}"
-npx gh-pages -d dist/demo -f
+npx gh-pages -d dist/demo -t -f
 
 echo -e "${GREEN}✓ Demo deployed successfully!${NC}"
 echo -e "${GREEN}View your demo at: https://$GITHUB_USER.github.io/$REPO_NAME/${NC}"
