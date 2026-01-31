@@ -98,7 +98,6 @@ export class AppComponent {
   }
 
   onFormSubmit(): void {
-    debugger
     if (this.form.valid) {
       console.log('Form submitted:', this.form.value);
       alert('Form submitted successfully! Check console for details.');

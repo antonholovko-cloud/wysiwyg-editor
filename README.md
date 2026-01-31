@@ -362,26 +362,6 @@ npm run serve:demo
 ./scripts/pack-nuget.sh     # Unix/Linux/macOS
 .\scripts\pack-nuget.ps1    # Windows PowerShell
 ```
-
-## Deployment
-
-### Deploy to npm
-
-```bash
-cd dist/ngx-wysiwyg-editor
-npm publish
-```
-
-### Deploy to NuGet
-
-```bash
-# Unix/Linux/macOS
-./scripts/deploy-nuget.sh YOUR_API_KEY
-
-# Windows PowerShell
-.\scripts\deploy-nuget.ps1 -ApiKey YOUR_API_KEY
-```
-
 ## Browser Support
 
 - Chrome (latest)
