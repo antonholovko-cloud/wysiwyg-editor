@@ -39,6 +39,10 @@ echo -e "${YELLOW}Building demo for production...${NC}"
 # Build with base href for GitHub Pages
 ng build demo --base-href "/$REPO_NAME/"
 
+# Add .nojekyll file to prevent Jekyll processing
+echo -e "${YELLOW}Adding .nojekyll file...${NC}"
+touch dist/demo/.nojekyll
+
 echo -e "${YELLOW}Installing gh-pages if needed...${NC}"
 if ! npm list --depth=0 gh-pages > /dev/null 2>&1; then
     npm install --save-dev gh-pages

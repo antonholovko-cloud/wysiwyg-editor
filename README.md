@@ -361,7 +361,20 @@ npm run serve:demo
 # Pack NuGet package
 ./scripts/pack-nuget.sh     # Unix/Linux/macOS
 .\scripts\pack-nuget.ps1    # Windows PowerShell
+
+# Deploy demo to GitHub Pages (manual - requires git authentication)
+npm run deploy:demo:gh-pages
 ```
+
+### Automated Deployment
+
+The demo is automatically deployed to GitHub Pages when code is pushed to the `main` branch using GitHub Actions. The workflow:
+
+1. Builds the demo with the correct base-href
+2. Adds a `.nojekyll` file (required for Angular apps on GitHub Pages)
+3. Deploys to the `gh-pages` branch
+
+You can also manually trigger the deployment from the GitHub Actions tab.
 ## Browser Support
 
 - Chrome (latest)
